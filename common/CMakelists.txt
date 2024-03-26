@@ -1,0 +1,53 @@
+# Copyright (c) 2024 Gamaliel Ltd
+#
+# 3.16 is required for target_precompile_headers(...PRECOMPILE_HEADERS_REUSE_FROM...)
+# 3.25 is required for CMAKE_C_COMPILE_OPTIONS_MSVC_DEBUG_INFORMATION_FORMAT
+cmake_minimum_required (VERSION 3.25)
+set(CMAKE_FOLDER ${CMAKE_CURRENT_SOURCE_DIR}/../cmake)
+include(${CMAKE_FOLDER}/header.cmake)
+
+set(PROJECT_NAME Common)
+set(TARGET common)
+
+set(SRC_FILES
+   src/algorithms.cpp
+   src/ascii.cpp
+   src/globals.cpp
+   src/logger.cpp
+)
+
+add_library(${TARGET} STATIC ${SRC_FILES})
+set(LIBRARY_OUTPUT_PATH ${CMAKE_CURRENT_SOURCE_DIR}/../lib)
+
+set_property(TARGET ${TARGET} PROPERTY CXX_STANDARD 20)	# std::jthread requires C++20
+
+target_include_directories(${TARGET} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
+
+target_precompile_headers(${TARGET} PRIVATE
+   # Standard Library
+   <algorithm>
+   <ctime>
+   <filesystem>
+   <iostream>
+   <memory>
+   <source_location>
+   <string>
+   <vector>
+
+   # Windows
+   <windows.h>
+
+   # Boost
+   <boost/date_time/posix_time/posix_time.hpp>
+   <boost/iostreams/concepts.hpp>
+   <boost/iostreams/stream_buffer.hpp>
+   <boost/json.hpp>
+   <boost/locale.hpp>
+   <boost/program_options.hpp>
+)
+
+find_package(Boost REQUIRED COMPONENTS date_time json program_options)
+target_include_directories(${TARGET} PRIVATE ${Boost_INCLUDE_DIRS})
+#target_link_libraries(${TARGET} PRIVATE ${Boost_LIBRARIES})
+
+include(${CMAKE_FOLDER}/footer.cmake)
