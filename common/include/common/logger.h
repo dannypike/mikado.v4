@@ -37,6 +37,13 @@ namespace mikado::common {
 		void logException(std::exception const &ex, std::source_location const &loc = std::source_location::current());
 		void logException(std::runtime_error const &ex, std::source_location const &loc = std::source_location::current());
 
+      void setOutputODS(bool value) {
+         Redirector::setOutputODS(value);
+      }
+      void setOutputStdout(bool value) {
+         Redirector::setOutputStdout(value);
+      }
+
 	protected:
 		std::ostream &streamLog(std::string const &logType, std::source_location const &loc);
 		std::ostream &logHeader(std::ostream &str, std::source_location const &loc);
@@ -54,18 +61,29 @@ namespace mikado::common {
 			Redirector() {}
 
 			std::streamsize write(const char *s, std::streamsize n);
-		};
+
+         static void setOutputODS(bool value) {
+            outputODS_ = value;
+         }
+         static void setOutputStdout(bool value) {
+            outputStdout_ = value;
+         }
+
+      private:
+         static bool outputODS_;
+         static bool outputStdout_;
+      };
 		boost::iostreams::stream_buffer<Redirector> buffer_;
 		std::streambuf *oldClog_ = nullptr;
 		std::ostream cnull_;
 	};
 } // namespace mikado::common
 
-#define str_debug(...) MikadoLog::MikadoLogger.streamDebug(__VA_ARGS__)
-#define str_info(...) MikadoLog::MikadoLogger.streamInfo(__VA_ARGS__)
-#define str_notice(...) MikadoLog::MikadoLogger.streamNotice(__VA_ARGS__)	// Leave out the chrome. Print only the message to the outputs
-#define str_warn(...) MikadoLog::MikadoLogger.streamWarn(__VA_ARGS__)
-#define str_error(...) MikadoLog::MikadoLogger.streamError(__VA_ARGS__)
-#define log_exception(ex, ...) MikadoLog::MikadoLogger.logException(ex, __VA_ARGS__)
+#define str_debug(...) mikado::common::MikadoLog::MikadoLogger.streamDebug(__VA_ARGS__)
+#define str_info(...) mikado::common::MikadoLog::MikadoLogger.streamInfo(__VA_ARGS__)
+#define str_notice(...) mikado::common::MikadoLog::MikadoLogger.streamNotice(__VA_ARGS__)	// Leave out the chrome. Print only the message to the outputs
+#define str_warn(...) mikado::common::MikadoLog::MikadoLogger.streamWarn(__VA_ARGS__)
+#define str_error(...) mikado::common::MikadoLog::MikadoLogger.streamError(__VA_ARGS__)
+#define log_exception(ex, ...) mikado::common::MikadoLog::MikadoLogger.logException(ex, __VA_ARGS__)
 
 #endif // CMN_LOGGER_H

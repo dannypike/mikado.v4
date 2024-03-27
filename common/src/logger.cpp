@@ -10,6 +10,9 @@ namespace mikado::common {
 	MikadoLog MikadoLog::MikadoLogger;
 	string MikadoLog::StripFolder;
 
+   bool MikadoLog::Redirector::outputODS_ = true;
+   bool MikadoLog::Redirector::outputStdout_ = true;
+
    ///////////////////////////////////////////////////////////////////////
    //
    MikadoLog::MikadoLog() : cnull_(nullptr) {
@@ -121,22 +124,28 @@ namespace mikado::common {
    //
    std::streamsize MikadoLog::Redirector::write(const char *s, std::streamsize n) {
 		string text(s, n);
-		OutputDebugStringA(text.c_str());
 
-	   // Strip the unwanted characters from the start of the debug message
-		// for outputting to the console
-		if (!StripFolder.empty() && text.starts_with(StripFolder)) {
-			text = text.substr(StripFolder.size() - 1);
-			int padCount = 0;
-			if (auto pos = text.find("): <"); string::npos != pos) {
-				string padding(max(0, 30 - (int)pos), '.');
-				cout << padding << text;
-			}
+      if (outputODS_) {
+         OutputDebugStringA(text.c_str());
       }
-		else
-		{
-			cout << text;
-		}
+
+      if (outputStdout_) {
+	      // Strip the unwanted characters from the start of the debug message
+		   // for outputting to the console
+		   if (!StripFolder.empty() && text.starts_with(StripFolder)) {
+			   text = text.substr(StripFolder.size() - 1);
+			   int padCount = 0;
+			   if (auto pos = text.find("): <"); string::npos != pos) {
+				   string padding(max(0, 30 - (int)pos), '.');
+				   cout << padding << text;
+			   }
+         }
+		   else
+		   {
+			   cout << text;
+		   }
+      }
+
 		return n;
 	}
 
