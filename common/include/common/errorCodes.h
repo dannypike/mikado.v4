@@ -46,6 +46,7 @@ namespace mikado::common {
       MKO_ERROR_PROCESS_TERMINATED = 122,
       MKO_ERROR_PROCESS_FAILED = 123,
       MKO_ERROR_INVALID_ARGUMENTS = 124,
+      MKO_ERROR_DID_NOT_RUN = 125,
    };
 
 } // namespace mikado::common

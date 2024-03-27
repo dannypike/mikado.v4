@@ -48,16 +48,19 @@ target_precompile_headers(${TARGET} PRIVATE
    <filesystem>
    <source_location>
    <string>
+	<thread>
 
    # Windows API
    <windows.h>
 
    # Boost
+   <boost/algorithm/string/predicate.hpp>
    <boost/date_time/posix_time/posix_time.hpp>
    <boost/iostreams/concepts.hpp>
    <boost/iostreams/stream_buffer.hpp>
    <boost/json.hpp>
    <boost/program_options.hpp>
+   <boost/tuple/tuple.hpp>
 )
 
 find_package(Boost REQUIRED COMPONENTS date_time json program_options)

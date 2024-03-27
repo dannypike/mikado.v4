@@ -11,6 +11,7 @@ set(PROJECT_NAME WindowsAPI)
 set(TARGET windowsApi)
 
 set(SRC_FILES
+   src/windowsFileMonitor.cpp
    src/windowsGlobals.cpp
    src/windowsHandle.cpp
    src/windowsPipe.cpp
@@ -43,6 +44,7 @@ target_precompile_headers(${TARGET} PRIVATE
    <boost/locale.hpp>
    <boost/date_time/posix_time/posix_time.hpp>
    <boost/program_options.hpp>
+   <boost/tuple/tuple.hpp>
 )
 
 find_package(Boost REQUIRED COMPONENTS date_time json program_options)
