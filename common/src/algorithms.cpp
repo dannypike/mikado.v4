@@ -257,7 +257,7 @@ namespace mikado::common {
 
       try {
          if (cfg.count(propertyName)) {
-            return move(cfg.at(propertyName).as<vector<string>>());
+            return cfg.at(propertyName).as<vector<string>>();
          }
       }
       catch (const std::exception &e) {
