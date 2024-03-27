@@ -26,6 +26,9 @@ namespace mikado::windowsApi {
       operator HANDLE() const;
       HANDLE *ptrHANDLE();
 
+   protected:
+      void moveFrom(WindowsHandle &other) noexcept;
+
    private:
       static std::recursive_mutex mux_;
       std::string debugName_;

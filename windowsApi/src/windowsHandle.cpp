@@ -37,45 +37,47 @@ namespace mikado::windowsApi {
    ///////////////////////////////////////////////////////////////////////
    //
    WindowsHandle::WindowsHandle(WindowsHandle &&other) noexcept {
-      scoped_lock lock(mux_);
-      debugName_ = other.debugName_;
-      handle_ = other.handle_;
-      attached_ = other.attached_;
-      managed_ = other.managed_;
-
-      other.handle_ = NULL;
-      other.attached_ = NULL;
-      other.managed_ = false;
-      other.debugName_.clear();
+      moveFrom(other);
    }
 
    ///////////////////////////////////////////////////////////////////////
    //
    WindowsHandle &WindowsHandle::operator=(WindowsHandle &&other) noexcept {
-      scoped_lock lock(mux_);
-      close();
-
-      debugName_ = other.debugName_;
-      handle_ = other.handle_;
-      attached_ = other.attached_;
-      managed_ = other.managed_;
-
-      other.handle_ = NULL;
-      other.attached_ = NULL;
-      other.managed_ = false;
-      other.debugName_.clear();
-
+      moveFrom(other);
       return *this;
    }
 
    ///////////////////////////////////////////////////////////////////////
    //
-   void WindowsHandle::attach(HANDLE *handle) {
+   void WindowsHandle::moveFrom(WindowsHandle &other) noexcept {
+      scoped_lock lock(mux_);
+      close();
+
+      debugName_ = other.debugName_;
+      other.debugName_.clear();
+
+      handle_ = other.handle_;
+      other.handle_ = NULL;
+
+      managed_ = other.managed_;
+      if (other.managed_) {
+         other.managed_ = false;
+         attached_ = other.attached_;
+         other.attached_ = nullptr;
+      }
+      else {
+         attached_ = nullptr;
+      }
+   }
+
+   ///////////////////////////////////////////////////////////////////////
+   //
+   void WindowsHandle::attach(HANDLE *ptrHandle) {
       std::scoped_lock lock(mux_);
       close();
 
       managed_ = true;
-      attached_ = handle;
+      attached_ = ptrHandle;
    }
 
    ///////////////////////////////////////////////////////////////////////
@@ -85,30 +87,29 @@ namespace mikado::windowsApi {
       if (managed_) {
          managed_ = false;
 
-         if (attached_) {
+         if (attached_ && (NULL != *attached_) && (INVALID_HANDLE_VALUE != *attached_)) {
             CloseHandle(*attached_);
             *attached_ = NULL;
          }
-         attached_ = nullptr;
-      } else {
+      } else if ((NULL != handle_) && (INVALID_HANDLE_VALUE != handle_)) {
          CloseHandle(handle_);
          handle_ = NULL;
       }
    }
 
-
    ///////////////////////////////////////////////////////////////////////
    //
    bool WindowsHandle::isOpen() const {
       std::scoped_lock lock(mux_);
-      return handle_ != NULL;
+      HANDLE const *handle = managed_ ? attached_ : &handle_;
+      return (NULL != handle != NULL) && (INVALID_HANDLE_VALUE != handle);
    }
 
    ///////////////////////////////////////////////////////////////////////
    //
    WindowsHandle::operator HANDLE() const {
       scoped_lock lock(mux_);
-      return managed_ ? *attached_ : handle_;
+      return managed_ ? (attached_ ? *attached_ : INVALID_HANDLE_VALUE) : handle_;
    }
 
    ///////////////////////////////////////////////////////////////////////
