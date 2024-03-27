@@ -118,4 +118,4 @@ namespace mikado::windowsApi {
       return managed_ ? attached_ : &handle_;
    }
 
-} // namespace mikado::common
+} // namespace mikado::windowsApi
