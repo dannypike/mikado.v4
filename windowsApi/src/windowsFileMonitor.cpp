@@ -174,8 +174,10 @@ namespace mikado::windowsApi {
             }
 
             if (0 == bytesReturned) {
-               // Too many changes detected.
-               str_warn() << "ReadDirectoryChangesW() returned 0 bytes; too many changes?" << endl;
+               if (isRunning_) {
+                  // Too many changes detected.
+                  str_warn() << "ReadDirectoryChangesW() returned 0 bytes; too many changes?" << endl;
+               }
                continue;
             }
 
