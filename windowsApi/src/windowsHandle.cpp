@@ -102,7 +102,7 @@ namespace mikado::windowsApi {
    bool WindowsHandle::isOpen() const {
       std::scoped_lock lock(mux_);
       HANDLE const *handle = managed_ ? attached_ : &handle_;
-      return (NULL != handle != NULL) && (INVALID_HANDLE_VALUE != handle);
+      return handle && (NULL != *handle) && (INVALID_HANDLE_VALUE != *handle);
    }
 
    ///////////////////////////////////////////////////////////////////////
