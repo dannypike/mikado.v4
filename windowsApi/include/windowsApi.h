@@ -6,6 +6,7 @@
 namespace mikado::windowsApi {}
 
 #include "windowsApi/windowsFileMonitor.h"
+#include "windowsApi/windowsGlobals.h"
 #include "windowsApi/windowsProcess.h"
 #include "windowsApi/windowsHandle.h"
 #include "windowsApi/windowsPipe.h"
