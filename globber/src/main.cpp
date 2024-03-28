@@ -6,6 +6,7 @@
 #include "windowsApi/windowsGlobals.h"
 #include "globber.h"
 
+namespace api = mikado::windowsApi;
 namespace common = mikado::common;
 namespace po = boost::program_options;
 namespace windowsApi = mikado::windowsApi;
@@ -15,7 +16,7 @@ using namespace std::filesystem;
 
 namespace mikado::globber {
    static MikadoErrorCode main(int argc, char *argv[]);
-   static bool ShutdownRequested = false;
+   static vector<api::WindowsFileMonitorPtr> FileMonitors;
 
    //////////////////////////////////////////////////////////////////////////
    //
@@ -26,7 +27,9 @@ namespace mikado::globber {
       case CTRL_LOGOFF_EVENT:
       case CTRL_SHUTDOWN_EVENT:
       case CTRL_CLOSE_EVENT:
-         ShutdownRequested = true;
+         for (auto mm : FileMonitors) {
+            mm->stopMonitoring();
+         }
          return TRUE;
       default:
          return FALSE;
@@ -117,6 +120,7 @@ namespace mikado::globber {
 
       // Configure the monitor from the command line
       auto monitor = make_shared<windowsApi::WindowsFileMonitor>();
+      FileMonitors.push_back(monitor); 
       if (auto rc = configureMonitor(args, monitor); MKO_IS_ERROR(rc)) {
          return rc;
       }
@@ -133,9 +137,9 @@ namespace mikado::globber {
       // Run the monitor and wait for Ctrl-C
       auto exitCode = MikadoErrorCode::MKO_ERROR_DID_NOT_RUN;
       SetConsoleCtrlHandler(consoleCtrlHandler, TRUE);
-      jthread monitorThread([](windowsApi::WindowsFileMonitorPtr monitor, path rootFolder, bool *shutdownRequest, MikadoErrorCode *exitCode){
-         *exitCode = monitor->run(rootFolder, shutdownRequest);
-         }, monitor, rootFolder, &ShutdownRequested, &exitCode);
+      jthread monitorThread([](windowsApi::WindowsFileMonitorPtr monitor, path rootFolder, MikadoErrorCode *exitCode){
+         *exitCode = monitor->run(rootFolder);
+         }, monitor, rootFolder, &exitCode);
       monitorThread.join();
 
       return exitCode;

@@ -4,6 +4,7 @@
 #define API_WINDOWS_FILEMON_H
 
 #include "common/errorCodes.h"
+#include "windowsApi/WindowsHandle.h"
 
 namespace mikado::windowsApi {
 
@@ -13,7 +14,7 @@ namespace mikado::windowsApi {
    public:
       enum class Action { None, Include, Exclude };
 
-      WindowsFileMonitor() = default;
+      WindowsFileMonitor();
       virtual ~WindowsFileMonitor() = default;
 
       typedef boost::tuple<Action, std::filesystem::path, std::filesystem::path> MonitorType;
@@ -36,7 +37,9 @@ namespace mikado::windowsApi {
       }
       MikadoErrorCode removeMonitor(MonitorId id);
 
-      MikadoErrorCode run(std::filesystem::path const &rootFolder, bool *stopMonitoring = nullptr);
+      MikadoErrorCode run(std::filesystem::path const &rootFolder);
+      bool stopRequested() const;
+      MikadoErrorCode stopMonitoring();
 
    protected:
       MikadoErrorCode addMonitor(Action action, std::filesystem::path const &glob, MonitorId *id = nullptr);
@@ -44,8 +47,10 @@ namespace mikado::windowsApi {
          , MonitorId *id = nullptr);
 
    private:
+      volatile bool isRunning_ = false;
       Action defaultAction_ = Action::Exclude;
       std::list<MonitorType> actions_;
+      WindowsHandle rootEvent_;  // The event that is signalled when a change is made to a file inside the root folder
    };
 
    typedef std::shared_ptr<WindowsFileMonitor> WindowsFileMonitorPtr;

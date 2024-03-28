@@ -1,8 +1,7 @@
 // Copyright (c) Gamaliel Ltd
-#include "common/algorithms.h"
-#include "common/errorCodes.h"
-#include "common/logger.h"
+#include "common.h"
 #include "windowsApi/windowsFileMonitor.h"
+#include "windowsApi/windowsGlobals.h"
 #include "windowsApi/windowsHandle.h"
 
 using namespace boost::tuples;
@@ -13,6 +12,14 @@ namespace mikado::windowsApi {
    
    typedef mikado::common::MikadoErrorCode MikadoErrorCode; // To reduce typing
 
+   ///////////////////////////////////////////////////////////////////////
+   //
+   WindowsFileMonitor::WindowsFileMonitor()
+      : rootEvent_(CreateEvent(NULL, TRUE, FALSE, NULL), "WindowsFileMonitor") {
+   }
+
+   ///////////////////////////////////////////////////////////////////////
+   //
    MikadoErrorCode WindowsFileMonitor::addMonitor(Action action, filesystem::path const &glob, MonitorId *id) {
       auto isWildcard = glob.has_filename() && glob.filename().string().find_first_of("*?") != string::npos;
       if (isWildcard) {
@@ -31,6 +38,8 @@ namespace mikado::windowsApi {
       return MikadoErrorCode::MKO_ERROR_NONE;
    }
 
+   ///////////////////////////////////////////////////////////////////////
+   //
    MikadoErrorCode WindowsFileMonitor::addMonitor(Action action, path const &folder
          , path const &filename, MonitorId *id) {
 
@@ -42,54 +51,50 @@ namespace mikado::windowsApi {
       return MikadoErrorCode::MKO_ERROR_NONE;
    }
 
+   ///////////////////////////////////////////////////////////////////////
+   //
    MikadoErrorCode WindowsFileMonitor::removeMonitor(MonitorId id) {
       actions_.erase(id);
       return MikadoErrorCode::MKO_ERROR_NONE;
    }
 
-#include <windows.h>
-#include <iostream>
-
-   void MonitorDirectory(LPCWSTR path) {
-      DWORD buffer[1024];
-      DWORD bytesReturned;
-      HANDLE directory = CreateFileW(path, FILE_LIST_DIRECTORY, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
-         NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, NULL);
-
-      if (directory == INVALID_HANDLE_VALUE) {
-         std::cerr << "Could not open directory.\n";
-         return;
-      }
-
-      while (true) {
-         if (ReadDirectoryChangesW(directory, buffer, sizeof(buffer), TRUE, FILE_NOTIFY_CHANGE_FILE_NAME, &bytesReturned, NULL, NULL)) {
-            FILE_NOTIFY_INFORMATION *notification = reinterpret_cast<FILE_NOTIFY_INFORMATION *>(buffer);
-
-            // Print the name of the changed file
-            std::wcout << "File changed: " << std::wstring(notification->FileName, notification->FileNameLength / sizeof(wchar_t)) << '\n';
-         }
-      }
-
-      CloseHandle(directory);
+   ///////////////////////////////////////////////////////////////////////
+   //
+   bool WindowsFileMonitor::stopRequested() const {
+      return isRunning_;
    }
 
-   int main() {
-      MonitorDirectory(L"C:\\path\\to\\directory");
-      return 0;
+   ///////////////////////////////////////////////////////////////////////
+   //
+   MikadoErrorCode WindowsFileMonitor::stopMonitoring() {
+      // Tell the monitor thread to shut down
+      isRunning_ = false;
+
+      // Kick the event to stop reading directory changes
+      if (!SetEvent((HANDLE)rootEvent_)) {
+         str_error() << "Could not signal the event to stop monitoring: "
+            << getLastErrorAsString() << endl;
+         return MikadoErrorCode::MKO_ERROR_INVALID_CONFIG;
+      }
+      return MikadoErrorCode::MKO_ERROR_NONE;
    }
 
-   MikadoErrorCode WindowsFileMonitor::run(path const &rootFolder, bool *stopMonitoring) {
+   ///////////////////////////////////////////////////////////////////////
+   //
+   MikadoErrorCode WindowsFileMonitor::run(path const &rootFolder) {
       WindowsHandlePtr folderHandle;
       try
       {
+         isRunning_ = true;
+
          // Register the folder
          auto folderNameW = rootFolder.wstring();
          folderHandle = make_shared<WindowsHandle>(
             CreateFileW(folderNameW.c_str(), FILE_LIST_DIRECTORY
                , FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
-               NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, NULL), "WindowsFileMonitor");
+               NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OVERLAPPED, NULL), "WindowsFileMonitor");
          if (!folderHandle->isOpen()) {
-            str_error() << "Could not open directory " << rootFolder << endl;
+            str_error() << "Could not open directory " << rootFolder << ": " << getLastErrorAsString() << endl;
             return MikadoErrorCode::MKO_ERROR_INVALID_CONFIG;
          }
 
@@ -99,16 +104,49 @@ namespace mikado::windowsApi {
          }
 
          // Monitor the root folder for changes
-         DWORD buffer[1024];
+
+         DWORD buffer[32 * 1024];
          DWORD bytesReturned;
-         while (!*stopMonitoring) {
-            if (ReadDirectoryChangesW(*folderHandle, buffer, sizeof(buffer), TRUE, FILE_NOTIFY_CHANGE_FILE_NAME, &bytesReturned, NULL, NULL)) {
-               FILE_NOTIFY_INFORMATION *notification = reinterpret_cast<FILE_NOTIFY_INFORMATION *>(buffer);
-               path pathName { common::toString(wstring(notification->FileName, notification->FileNameLength / sizeof(wchar_t))) };
+         DWORD const watchFlags = FILE_NOTIFY_CHANGE_FILE_NAME | FILE_NOTIFY_CHANGE_DIR_NAME | FILE_NOTIFY_CHANGE_SIZE
+            | FILE_NOTIFY_CHANGE_LAST_WRITE | FILE_NOTIFY_CHANGE_CREATION;
+         while (isRunning_) {
+            
+            // Use a new OVERLAPPED structure instance for each call to ReadDirectoryChangesW()
+            OVERLAPPED overlapped;
+            ZeroMemory(&overlapped, sizeof(overlapped));
+            overlapped.hEvent = rootEvent_;
+
+            // Prime the directory watcher with overlapped I/O
+            if (!ReadDirectoryChangesW(*folderHandle, buffer, sizeof(buffer), TRUE, watchFlags, NULL, &overlapped, NULL)) {
+               isRunning_ = false;
+               str_error() << "Error reading directory changes: " << getLastErrorAsString() << endl;
+               return MikadoErrorCode::MKO_ERROR_MONITOR_FAILED;
+            }
+
+            // Wait for a change to a file in or under the root folder
+            if (isRunning_ && !GetOverlappedResultEx(*folderHandle, &overlapped, &bytesReturned, INFINITE, TRUE)) {               
+               str_error() << "Error getting overlapped result: " << getLastErrorAsString() << endl;
+               isRunning_ = false;
+               return MikadoErrorCode::MKO_ERROR_MONITOR_FAILED;
+            }
+
+            if (0 == bytesReturned) {
+               // Too many changes detected.
+               str_warn() << "ReadDirectoryChangesW() returned 0 bytes; too many changes?" << endl;
+               continue;
+            }
+
+            // Process all of the updates 
+            auto offset = 0;
+            auto notification = reinterpret_cast<FILE_NOTIFY_INFORMATION *>(buffer);
+            do {
+               notification = reinterpret_cast<FILE_NOTIFY_INFORMATION *>(reinterpret_cast<char *>(notification) + offset);
+               path pathName{ common::toString(wstring(notification->FileName, notification->FileNameLength / sizeof(wchar_t))) };
 
                // Print the name of the changed file
                str_info() << "Detected a change to: " << pathName << endl;
-            }
+               offset += notification->NextEntryOffset;
+            } while (notification->NextEntryOffset);
          }
       }
       catch (const std::exception &e)
