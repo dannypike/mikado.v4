@@ -3,7 +3,7 @@ message("Processing CMakeLists.txt for ${PROJECT_NAME}")
 message("")
 
 set(CMAKE_VERBOSE_MAKEFILE ON)
-set(DUMP_VARIABLES OFF)
+set(DUMP_VARIABLES FALSE)
 
 # Enable Hot Reload for MSVC compilers if supported.
 # This MUST be set before the project() statement or it will not be possible to

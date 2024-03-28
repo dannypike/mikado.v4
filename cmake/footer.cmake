@@ -1,5 +1,6 @@
+include(../cmake/dumpVariables.cmake)
+
 if (${DUMP_VARIABLES}) # Set to FALSE to disable the following code
-    include(dumpVariables.cmake)
     message("")
     message("####################################################")
     message("List of variables for ${PROJECT_NAME}:")
