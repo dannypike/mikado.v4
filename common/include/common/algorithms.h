@@ -35,12 +35,19 @@ namespace mikado::common {
    std::vector<std::string> poGetVectorString(boost::program_options::variables_map const &cfg
       , std::string const &propertyName, bool required = false
       , std::source_location const &loc = std::source_location::current());
-   bool poGetBool(boost::program_options::variables_map const &cfg, std::string const &propertyName
-      , bool const *defaultValue = nullptr, std::source_location const &loc = std::source_location::current());
-   unsigned poGetUnsigned(boost::program_options::variables_map const &cfg, std::string const &propertyName
-      , unsigned const *defaultValue = nullptr, std::source_location const &loc = std::source_location::current());
-   float poGetFloat(boost::program_options::variables_map const &cfg, std::string const &propertyName
-      , float const *defaultValue = nullptr, std::source_location const &loc = std::source_location::current());
+   
+   template<class T>
+   T poGet(boost::program_options::variables_map const &cfg, std::string const &propertyName
+      , T const *defaultValue, std::source_location const &loc = std::source_location::current()) {
+
+      try {
+         return cfg.at(propertyName).as<T>();
+      }
+      catch (const std::exception &e) {
+         // Return the default value
+      }
+      return defaultValue ? *defaultValue : T{};
+   }
 
 } // namespace mikado::common
 
