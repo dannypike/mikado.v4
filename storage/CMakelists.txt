@@ -20,11 +20,11 @@ set(LIB_FOLDER ${CMAKE_CURRENT_SOURCE_DIR}/../lib)
 
 include(${CMAKE_FOLDER}/header.cmake)
 
-set(PROJECT_NAME Globber)
-set(TARGET globber)
+set(PROJECT_NAME Storage)
+set(TARGET storage)
 
 set(SRC_FILES
-   "src/globber.cpp"
+   "src/storage.cpp"
 )
 
 add_executable(${TARGET} ${SRC_FILES})
@@ -54,6 +54,9 @@ target_precompile_headers(${TARGET} PRIVATE
    # Windows API
    <windows.h>
 
+   # Database
+   <sqlite3.h>
+
    # Boost
    <boost/algorithm/string/predicate.hpp>
    <boost/date_time/posix_time/posix_time.hpp>
@@ -68,5 +71,8 @@ target_precompile_headers(${TARGET} PRIVATE
 find_package(Boost REQUIRED COMPONENTS date_time json program_options)
 target_include_directories(${TARGET} PRIVATE ${Boost_INCLUDE_DIRS})
 target_link_libraries(${TARGET} PRIVATE ${Boost_LIBRARIES})
+
+find_package(unofficial-sqlite3 CONFIG REQUIRED)
+target_link_libraries(${TARGET} PRIVATE unofficial::sqlite3::sqlite3)
 
 include(${CMAKE_FOLDER}/footer.cmake)

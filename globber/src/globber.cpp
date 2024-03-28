@@ -111,9 +111,17 @@ namespace mikado::globber {
          ;
 
       po::variables_map args;
-      store(po::command_line_parser(argc, argv).
-         options(options).run(), args);
-      notify(args);
+      try
+      {
+         store(po::command_line_parser(argc, argv).
+            options(options).run(), args);
+         notify(args);
+      }
+      catch (const std::exception &e)
+      {
+         str_error() << e.what() << endl;
+         return MikadoErrorCode::MKO_ERROR_INVALID_CONFIG;
+      }
 
       // If anything asks for help, that's the only thing we do
       if (args.count("help")) {

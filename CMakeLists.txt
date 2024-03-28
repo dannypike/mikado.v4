@@ -6,4 +6,5 @@ project(MikadoV4)
 
 add_subdirectory(common)
 add_subdirectory(windowsApi)
+add_subdirectory(storage)
 add_subdirectory(globber)
