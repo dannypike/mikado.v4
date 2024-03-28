@@ -50,6 +50,7 @@ namespace mikado::common {
       MKO_ERROR_INVALID_ARGUMENTS = 124,
       MKO_ERROR_DID_NOT_RUN = 125,
       MKO_ERROR_MONITOR_FAILED = 126,
+      MKO_ERROR_SERVER_LISTEN = 127,
    };
 
 } // namespace mikado::common
