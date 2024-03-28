@@ -1,5 +1,7 @@
 # Copyright (c) 2024 Gamaliel Ltd
 #
+# Windows-specific stuff
+#
 # 3.16 is required for target_precompile_headers(...PRECOMPILE_HEADERS_REUSE_FROM...)
 # 3.25 is required for CMAKE_C_COMPILE_OPTIONS_MSVC_DEBUG_INFORMATION_FORMAT
 cmake_minimum_required (VERSION 3.25)

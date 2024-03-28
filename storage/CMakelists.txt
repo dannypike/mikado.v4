@@ -1,14 +1,6 @@
 # Copyright (c) 2024 Gamaliel Ltd
 #
-# Globber reads a list of file globs from stdin and outputs matching file names to stdout
-# It continues to monitor the globs for changes and outputs more files accordingly
-#
-# Each output is sent as a JSON object:
-#
-# {
-#   "file": "filename",
-#   "action": "add" | "remove" | "update"
-# }
+# Storage is a persistent store for Mikado. The current version uses sqllite3 as its database.
 #
 # 3.16 is required for target_precompile_headers(...PRECOMPILE_HEADERS_REUSE_FROM...)
 # 3.25 is required for CMAKE_C_COMPILE_OPTIONS_MSVC_DEBUG_INFORMATION_FORMAT
