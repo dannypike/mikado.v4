@@ -59,6 +59,7 @@ target_precompile_headers(${TARGET} PRIVATE
    <boost/iostreams/concepts.hpp>
    <boost/iostreams/stream_buffer.hpp>
    <boost/json.hpp>
+	<boost/lockfree/spsc_queue.hpp>
    <boost/program_options.hpp>
    <boost/tuple/tuple.hpp>
 )

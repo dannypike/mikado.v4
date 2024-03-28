@@ -14,7 +14,15 @@ namespace mikado::windowsApi {
    public:
       enum class Action { None, Include, Exclude };
 
-      WindowsFileMonitor();
+      struct QueueData {
+         std::string json;
+      };
+      typedef std::shared_ptr<QueueData> QueueDataPtr;
+
+      typedef boost::lockfree::spsc_queue<QueueDataPtr, boost::lockfree::capacity<1024>> UpdateQueue;
+      typedef std::shared_ptr<UpdateQueue> UpdateQueuePtr;
+
+      WindowsFileMonitor(UpdateQueuePtr updateQueue);
       virtual ~WindowsFileMonitor() = default;
 
       typedef boost::tuple<Action, std::filesystem::path, std::filesystem::path> MonitorType;
@@ -45,12 +53,14 @@ namespace mikado::windowsApi {
       MikadoErrorCode addMonitor(Action action, std::filesystem::path const &glob, MonitorId *id = nullptr);
       MikadoErrorCode addMonitor(Action action, std::filesystem::path const &folder, std::filesystem::path const &fileGlob
          , MonitorId *id = nullptr);
+      MikadoErrorCode processDirectoryChange(boost::json::array *jv, FILE_NOTIFY_INFORMATION const *notification);
 
    private:
       volatile bool isRunning_ = false;
       Action defaultAction_ = Action::Exclude;
       std::list<MonitorType> actions_;
       WindowsHandle rootEvent_;  // The event that is signalled when a change is made to a file inside the root folder
+      UpdateQueuePtr updateQueue_;
    };
 
    typedef std::shared_ptr<WindowsFileMonitor> WindowsFileMonitorPtr;

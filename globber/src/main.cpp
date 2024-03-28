@@ -17,6 +17,7 @@ using namespace std::filesystem;
 namespace mikado::globber {
    static MikadoErrorCode main(int argc, char *argv[]);
    static vector<api::WindowsFileMonitorPtr> FileMonitors;
+   static bool IsRunning = true;
 
    //////////////////////////////////////////////////////////////////////////
    //
@@ -30,6 +31,7 @@ namespace mikado::globber {
          for (auto mm : FileMonitors) {
             mm->stopMonitoring();
          }
+         IsRunning = false;
          return TRUE;
       default:
          return FALSE;
@@ -118,8 +120,10 @@ namespace mikado::globber {
          return showHelp(options);
       }
 
-      // Configure the monitor from the command line
-      auto monitor = make_shared<windowsApi::WindowsFileMonitor>();
+      // Use a single lock-free queue to receive updates from all of the monitors
+      // (in the first version, we only have a single monitor)
+      auto updateQueue = make_shared<api::WindowsFileMonitor::UpdateQueue>();
+      auto monitor = make_shared<windowsApi::WindowsFileMonitor>(updateQueue);
       FileMonitors.push_back(monitor); 
       if (auto rc = configureMonitor(args, monitor); MKO_IS_ERROR(rc)) {
          return rc;
@@ -134,14 +138,28 @@ namespace mikado::globber {
       common::MikadoLog::MikadoLogger.setOutputStdout(false);
       outputBanner();
 
-      // Run the monitor and wait for Ctrl-C
+      // Stop the program on Ctrl-C
       auto exitCode = MikadoErrorCode::MKO_ERROR_DID_NOT_RUN;
       SetConsoleCtrlHandler(consoleCtrlHandler, TRUE);
+
+      // Run the monitor thread
       jthread monitorThread([](windowsApi::WindowsFileMonitorPtr monitor, path rootFolder, MikadoErrorCode *exitCode){
          *exitCode = monitor->run(rootFolder);
          }, monitor, rootFolder, &exitCode);
+
+      // Wait for the monitor to detect changes to files and write them to cout
+      while (IsRunning) {
+         if (!updateQueue->consume_one([](api::WindowsFileMonitor::QueueDataPtr queueData) {
+               cout << queueData->json << endl;
+               })) {
+            this_thread::sleep_for(10ms);
+         }
+      }
+
+      str_info() << "shutting down" << endl;
       monitorThread.join();
 
+      str_info() << "exiting with code " << (int)exitCode << endl;
       return exitCode;
    }
     

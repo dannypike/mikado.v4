@@ -43,6 +43,7 @@ target_precompile_headers(${TARGET} PRIVATE
    <boost/json.hpp>
    <boost/locale.hpp>
    <boost/date_time/posix_time/posix_time.hpp>
+	<boost/lockfree/spsc_queue.hpp>
    <boost/program_options.hpp>
    <boost/tuple/tuple.hpp>
 )

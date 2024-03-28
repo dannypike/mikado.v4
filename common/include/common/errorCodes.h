@@ -20,6 +20,8 @@ namespace mikado::common {
       MKO_STATUS_STOPPED = 8,
       MKO_STATUS_NOOP = 9,
       MKO_STATUS_HTTP_ERROR = 10,
+      MKO_STATUS_UNKNOWN_CODE = 11,
+
       MKO_ERROR_MAXSTATUS = 99,
       MKO_ERROR_OPEN_FAILED = 100,
       MKO_ERROR_PATH_NOT_FOUND = 101,

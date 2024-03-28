@@ -4,6 +4,7 @@
 #include "windowsApi/windowsGlobals.h"
 #include "windowsApi/windowsHandle.h"
 
+namespace json = boost::json;
 using namespace boost::tuples;
 using namespace std;
 using namespace filesystem;
@@ -14,8 +15,9 @@ namespace mikado::windowsApi {
 
    ///////////////////////////////////////////////////////////////////////
    //
-   WindowsFileMonitor::WindowsFileMonitor()
-      : rootEvent_(CreateEvent(NULL, TRUE, FALSE, NULL), "WindowsFileMonitor") {
+   WindowsFileMonitor::WindowsFileMonitor(UpdateQueuePtr updateQueue)
+      : updateQueue_(updateQueue)
+      , rootEvent_(CreateEvent(NULL, TRUE, FALSE, NULL), "WindowsFileMonitor") {
    }
 
    ///////////////////////////////////////////////////////////////////////
@@ -81,6 +83,47 @@ namespace mikado::windowsApi {
 
    ///////////////////////////////////////////////////////////////////////
    //
+   MikadoErrorCode WindowsFileMonitor::processDirectoryChange(json::array *jv
+         , FILE_NOTIFY_INFORMATION const *notification) {
+
+      string actionString;
+      path pathName{ common::toString(wstring(notification->FileName, notification->FileNameLength / sizeof(wchar_t))) };
+
+      // Output the file details
+      str_info() << "Detected a change to: " << pathName << endl;
+
+      switch (notification->Action)
+      {
+      case FILE_ACTION_ADDED:
+         actionString = "added";
+         break;
+      case FILE_ACTION_REMOVED:
+         actionString = "removed";
+         break;
+      case FILE_ACTION_MODIFIED:
+         actionString = "modified";
+         break;
+      case FILE_ACTION_RENAMED_OLD_NAME:
+         actionString = "renameFrom";
+         break;
+      case FILE_ACTION_RENAMED_NEW_NAME:
+         actionString = "renameTo";
+         break;
+
+      default:
+         str_error() << "unrecognized directory change action: " << notification->Action << endl;
+         return MikadoErrorCode::MKO_STATUS_UNKNOWN_CODE;
+      }
+      jv->emplace_back(
+         json::object {
+            { "action", actionString },
+            { "path", pathName.string() }
+         });
+      return MikadoErrorCode::MKO_ERROR_NONE;
+   }
+
+   ///////////////////////////////////////////////////////////////////////
+   //
    MikadoErrorCode WindowsFileMonitor::run(path const &rootFolder) {
       WindowsHandlePtr folderHandle;
       try
@@ -137,16 +180,24 @@ namespace mikado::windowsApi {
             }
 
             // Process all of the updates 
+            json::array jv;
             auto offset = 0;
             auto notification = reinterpret_cast<FILE_NOTIFY_INFORMATION *>(buffer);
             do {
                notification = reinterpret_cast<FILE_NOTIFY_INFORMATION *>(reinterpret_cast<char *>(notification) + offset);
-               path pathName{ common::toString(wstring(notification->FileName, notification->FileNameLength / sizeof(wchar_t))) };
+               if (auto rc = processDirectoryChange(&jv, notification); MikadoErrorCode::MKO_ERROR_NONE != rc) {
+                  if (MKO_IS_ERROR(rc)) {
+                     return rc;
+                  }
+                  // Otherwise, we just ignore the error and keep going
+               }  
 
-               // Print the name of the changed file
-               str_info() << "Detected a change to: " << pathName << endl;
                offset += notification->NextEntryOffset;
             } while (notification->NextEntryOffset);
+
+            auto update = make_shared<QueueData>();
+            update->json = serialize(jv);
+            updateQueue_->push(update);
          }
       }
       catch (const std::exception &e)
