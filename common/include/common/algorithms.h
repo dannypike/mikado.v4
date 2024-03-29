@@ -1,4 +1,5 @@
 #pragma once
+// Copyright (c) 2024 Gamaliel Ltd
 #if !defined(CMN_ALGORITHMS_H)
 #define CMN_ALGORITHMS_H
 
