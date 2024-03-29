@@ -15,7 +15,7 @@ namespace mikado::broker {
       Handler() = default;
       ~Handler() = default;
 
-      MikadoErrorCode configure(boost::program_options::variables_map const &cfg);
+      MikadoErrorCode configure(common::ConfigurePtr cfg);
       MikadoErrorCode initialize();
       void shutdown();
 

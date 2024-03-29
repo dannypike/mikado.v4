@@ -39,13 +39,13 @@ namespace mikado::broker {
 
    //////////////////////////////////////////////////////////////////////////
    //
-   static MikadoErrorCode showHelp(po::options_description const &options) {
+   static MikadoErrorCode showHelp(common::ConfigurePtr cfg) {
       common::MikadoLog::MikadoLogger.setOutputODS(false);
       common::MikadoLog::MikadoLogger.setOutputStdout(true);
       outputBanner();
       str_notice() << "Usage: broker [options]" << endl << endl
          << "Where [options] are:" << endl;
-      cout << options << endl
+      cout << cfg->description() << endl
          << "Hit Ctrl-C to stop" << endl;
       return MikadoErrorCode::MKO_ERROR_NONE;
    }
@@ -54,19 +54,32 @@ namespace mikado::broker {
    //
    static MikadoErrorCode main(int argc, char *argv[]) {
 
-      po::options_description options;
-      options.add_options()
+      auto options = make_shared<common::Configure>();
+      options->addOptions()
          ("interface", po::value<string>(), "interface to listen on (default: 127.0.0.1)")
          ("port", po::value<int>(), "port to listen on (default: 22304)")
+         ("app", po::value<string>(), "test option")
          ("help", "produce help message")
          ;
 
-      po::variables_map args;
       try
       {
-         store(po::command_line_parser(argc, argv).
-            options(options).run(), args);
-         notify(args);
+         // If the configuration file exists, we read it first
+         path exePath(argv[0]);
+         path cfgFilename { exePath.parent_path() / "cfg" / exePath.filename().replace_extension(".cfg") };
+         if (auto rc = options->importFile(cfgFilename); MKO_IS_ERROR(rc)) {
+            str_error() << "Failed to import configuration file " << cfgFilename << ", error = " << (int)rc << endl;
+            return rc;
+         }
+
+         // Then we read the command line
+         if (auto rc = options->importCommandline(argc, argv); MKO_IS_ERROR(rc)) {
+            str_error() << "Failed to import command line, error = " << (int)rc << endl;
+            return rc;
+         }
+
+         // Then we notify the options
+         options->notify();
       }
       catch (const std::exception &e)
       {
@@ -74,8 +87,13 @@ namespace mikado::broker {
          return MikadoErrorCode::MKO_ERROR_INVALID_CONFIG;
       }
 
+      if (options->hasOption("app")) {
+         str_info() << "app:" <<endl
+            << options->get<string>("app") << endl;
+      }
+
       // If anything asks for help, that's the only thing we do
-      if (args.count("help")) {
+      if (options->hasOption("help")) {
          return showHelp(options);
       }
 
@@ -96,7 +114,7 @@ namespace mikado::broker {
 
       // Start the WebSocket server
       HandlerPtr server = make_shared<Handler>();
-      if (auto rc = server->configure(args); MKO_IS_ERROR(rc)) {
+      if (auto rc = server->configure(options); MKO_IS_ERROR(rc)) {
          return rc;
       }
       if (auto rc = server->initialize(); MKO_IS_ERROR(rc)) {

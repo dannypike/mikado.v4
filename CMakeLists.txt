@@ -4,6 +4,7 @@ cmake_minimum_required (VERSION 3.25)
 
 project(MikadoV4)
 
+add_subdirectory(cfg)
 add_subdirectory(common)
 add_subdirectory(windowsApi)
 add_subdirectory(broker)
