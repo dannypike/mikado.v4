@@ -10,5 +10,6 @@ namespace mikado::common {}
 #include "common/errorCodes.h"
 #include "common/globals.h"
 #include "common/logger.h"
+#include "common/configure.h"
 
-#endif // MKO_COMMON_H
+#endif // MKO_COMMON_H     

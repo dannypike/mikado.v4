@@ -16,6 +16,7 @@ set(SRC_FILES
    src/ascii.cpp
    src/globals.cpp
    src/logger.cpp
+   src/configure.cpp
 )
 
 add_library(${TARGET} STATIC ${SRC_FILES})
