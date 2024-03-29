@@ -12,7 +12,7 @@ set(API_FOLDER ${CMAKE_CURRENT_SOURCE_DIR}/../windowsApi)
 set(LIB_FOLDER ${CMAKE_CURRENT_SOURCE_DIR}/../lib)
 
 include(${CMAKE_FOLDER}/header.cmake)
-set(DUMP_VARIABLES TRUE)
+set(DUMP_VARIABLES FALSE)
 
 set(PROJECT_NAME Broker)
 set(TARGET broker)
