@@ -43,8 +43,18 @@ target_precompile_headers(${TARGET} PRIVATE
    <string>
 	<thread>
 
-   # Windows API
-   <windows.h>
+   # Windows
+   <winsock2.h>
+	"../include/windows-hack.h"	# undef's min and max
+	<wincrypt.h>
+
+	# OpenSSL
+	<openssl/bio.h>
+	<openssl/pem.h>
+	<openssl/x509.h>
+
+	# IXWebsocket
+	<ixwebsocket/IXWebSocketServer.h>
 
    # Database
    <sqlite3.h>
@@ -66,5 +76,13 @@ target_link_libraries(${TARGET} PRIVATE ${Boost_LIBRARIES})
 
 find_package(unofficial-sqlite3 CONFIG REQUIRED)
 target_link_libraries(${TARGET} PRIVATE unofficial::sqlite3::sqlite3)
+
+find_package(OpenSSL REQUIRED)
+target_link_libraries(${TARGET} PRIVATE ${OPENSSL_LIBRARIES})
+target_link_libraries(${TARGET} PRIVATE Crypt32 d3d9.lib)
+
+find_package(ixwebsocket CONFIG REQUIRED)
+#add_subdirectory(${CMAKE_SOURCE_DIR}/IXWebSocket)
+target_link_libraries(${TARGET} PRIVATE ixwebsocket::ixwebsocket)
 
 include(${CMAKE_FOLDER}/footer.cmake)

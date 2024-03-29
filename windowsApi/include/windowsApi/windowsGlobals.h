@@ -4,9 +4,12 @@
 #define API_WINDOWS_GLOBALS_H
 
 namespace mikado::windowsApi {
-   
+   typedef mikado::common::MikadoErrorCode MikadoErrorCode;
+
    std::string getLastErrorAsString(DWORD *lastError = nullptr);
-   mikado::common::MikadoErrorCode apiInitialize(int argc, char *argv[]);
+   MikadoErrorCode apiInitialize(int argc, char *argv[]);
+   MikadoErrorCode apiSetupConsole(std::string const &consoleTitle
+      , std::function<void()> showBanner);
    void apiShutdown();
 
 } // namespace mikado::windowsApi

@@ -7,6 +7,12 @@ using namespace filesystem;
 namespace mikado::common {
 
    path MikadoExeFolder;
+   bool MikadoShutdownRequested = false;
+
+   // The appIds are used to identify each application over the web sockets and elsewhere   
+   string appIdBroker { "broker" };
+   string appIdGlobber{ "globber" };
+   string appIdStorage{ "storage" };
 
    MikadoErrorCode commonInitialize(int argc, char *argv[]) {
       if (argc < 1) {

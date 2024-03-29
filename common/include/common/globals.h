@@ -7,6 +7,11 @@
 
 namespace mikado::common {
    extern std::filesystem::path MikadoExeFolder;
+   extern bool MikadoShutdownRequested;
+
+   extern std::string appIdBroker;
+   extern std::string appIdGlobber;
+   extern std::string appIdStorage;
 
    MikadoErrorCode commonInitialize(int argc, char *argv[]);
    void commonShutdown();

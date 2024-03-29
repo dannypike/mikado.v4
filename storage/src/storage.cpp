@@ -1,9 +1,5 @@
-#include "common/algorithms.h"
-#include "common/errorCodes.h"
-#include "common/globals.h"
-#include "common/logger.h"
-#include "windowsApi/windowsFileMonitor.h"
-#include "windowsApi/windowsGlobals.h"
+#include "common.h"
+#include "windowsApi.h"
 #include "storage.h"
 
 namespace api = mikado::windowsApi;
@@ -19,6 +15,21 @@ namespace mikado::storage {
 
    //////////////////////////////////////////////////////////////////////////
    //
+   BOOL WINAPI consoleCtrlHandler(DWORD ctrlType) {
+      switch (ctrlType) {
+      case CTRL_C_EVENT:
+      case CTRL_BREAK_EVENT:
+      case CTRL_LOGOFF_EVENT:
+      case CTRL_SHUTDOWN_EVENT:
+      case CTRL_CLOSE_EVENT:
+         return TRUE;
+      default:
+         return FALSE;
+      }
+   }
+
+   //////////////////////////////////////////////////////////////////////////
+   //
    static void outputBanner() {
       str_notice() << "Storage version " << STORAGE_VERSION_MAJOR << "." << STORAGE_VERSION_MINOR
          << " (" << __DATE__ << " " << __TIME__ << ")" << endl;
@@ -27,52 +38,21 @@ namespace mikado::storage {
 
    //////////////////////////////////////////////////////////////////////////
    //
-   static MikadoErrorCode showHelp(po::options_description const &options) {
-      common::MikadoLog::MikadoLogger.setOutputODS(false);
-      common::MikadoLog::MikadoLogger.setOutputStdout(true);
-      outputBanner();
-      str_notice() << "Usage: storage [options]" << endl << endl
-         << "Where [options] are:" << endl;
-      cout << options << endl
-         << "Hit Ctrl-C to stop" << endl;
-      return MikadoErrorCode::MKO_ERROR_NONE;
-   }
-
-   //////////////////////////////////////////////////////////////////////////
-   //
    static MikadoErrorCode main(int argc, char *argv[]) {
 
-      po::options_description options;
-      options.add_options()
-         //("default", po::value<string>(), "default action (include|exclude)")
-         ("help", "produce help message")
-         ;
+      auto options = make_shared<common::Configure>(common::appIdStorage, "Mikado Storage");
 
-      po::variables_map args;
-      try
-      {
-         store(po::command_line_parser(argc, argv).
-            options(options).run(), args);
-         notify(args);
-      }
-      catch (const std::exception &e)
-      {
-         str_error() << e.what() << endl;
-         return MikadoErrorCode::MKO_ERROR_INVALID_CONFIG;
+      // There is a typical sequence of processing options, that we do for all of the applications
+      auto rc = options->defaultProcessing(argc, argv, outputBanner);
+      if (MikadoErrorCode::MKO_ERROR_NONE != rc) { // May be an MKO_STATUS, so we don't use MKO_IS_ERROR() here
+         // Already output a message
+         return rc;
       }
 
-      // If anything asks for help, that's the only thing we do
-      if (args.count("help")) {
-         return showHelp(options);
-      }
+      // Set up Ctrl-C/break handler, suppress stdout debug-logging and display the banner
+      windowsApi::apiSetupConsole(options->get<string>("console-title"), outputBanner);
 
-      // Don't output anything to the console. We do this now just in case there were
-      // any errors in the configuration.
-      common::MikadoLog::MikadoLogger.setOutputStdout(false);
-      outputBanner();
-
-      auto exitCode = MikadoErrorCode::MKO_STATUS_NOOP;
-
+      auto exitCode = MikadoErrorCode::MKO_ERROR_DID_NOT_RUN;
       str_info() << "shutting down" << endl;
 
       str_info() << "exiting with code " << exitCode << endl;
