@@ -53,6 +53,8 @@ namespace mikado::common {
       MKO_ERROR_SERVER_LISTEN = 127,
    };
 
+   std::ostream &operator<<(std::ostream &os, enum MikadoErrorCode code);
+
 } // namespace mikado::common
 
 #endif // CMN_ERROR_CODES_H

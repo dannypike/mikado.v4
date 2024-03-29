@@ -19,4 +19,8 @@ namespace mikado::common {
    void commonShutdown() {
    }
 
+   ostream &operator<<(ostream &os, enum MikadoErrorCode code) {
+      return os << static_cast<int>(code);
+   }
+
 } // namespace mikado::common

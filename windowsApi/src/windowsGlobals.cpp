@@ -29,7 +29,6 @@ namespace mikado::windowsApi {
       return message;
    }
 
-
    MikadoErrorCode apiInitialize(int argc, char *argv[]) {
       return MikadoErrorCode::MKO_ERROR_NONE;
    }

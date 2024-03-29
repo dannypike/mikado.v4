@@ -1,9 +1,5 @@
-#include "common/algorithms.h"
-#include "common/errorCodes.h"
-#include "common/globals.h"
-#include "common/logger.h"
-#include "windowsApi/windowsFileMonitor.h"
-#include "windowsApi/windowsGlobals.h"
+#include "common.h"
+#include "windowsApi.h"
 #include "globber.h"
 
 namespace api = mikado::windowsApi;
@@ -167,7 +163,7 @@ namespace mikado::globber {
       str_info() << "shutting down" << endl;
       monitorThread.join();
 
-      str_info() << "exiting with code " << (int)exitCode << endl;
+      str_info() << "exiting with code " << exitCode << endl;
       return exitCode;
    }
     
@@ -176,6 +172,7 @@ namespace mikado::globber {
 //////////////////////////////////////////////////////////////////////////
 //
 int main(int argc, char *argv[]) {
+
     if (auto rc = common::commonInitialize(argc, argv); MKO_IS_ERROR(rc)) {
         return (int)rc;
     }

@@ -212,7 +212,7 @@ namespace mikado::windowsApi {
 
       MikadoErrorCode result = MikadoErrorCode::MKO_ERROR_PROCESS_FAILED;
       if (auto rc = waitForProcess(&exitCode_); MKO_IS_ERROR(rc)) {
-         str_error() << "waitForProcess(" << (HANDLE)*proc_ << ") failed with error: " << (int)rc << endl;
+         str_error() << "waitForProcess(" << (HANDLE)*proc_ << ") failed with error: " << rc << endl;
          return rc;
       }
       str_info() << "Process " << procInfo_.dwProcessId << " exited with code " << exitCode_ << endl;

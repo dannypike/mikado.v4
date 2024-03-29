@@ -68,13 +68,13 @@ namespace mikado::broker {
          path exePath(argv[0]);
          path cfgFilename { exePath.parent_path() / "cfg" / exePath.filename().replace_extension(".cfg") };
          if (auto rc = options->importFile(cfgFilename); MKO_IS_ERROR(rc)) {
-            str_error() << "Failed to import configuration file " << cfgFilename << ", error = " << (int)rc << endl;
+            str_error() << "Failed to import configuration file " << cfgFilename << ", error = " << rc << endl;
             return rc;
          }
 
          // Then we read the command line
          if (auto rc = options->importCommandline(argc, argv); MKO_IS_ERROR(rc)) {
-            str_error() << "Failed to import command line, error = " << (int)rc << endl;
+            str_error() << "Failed to import command line, error = " << rc << endl;
             return rc;
          }
 
@@ -136,7 +136,7 @@ namespace mikado::broker {
          }
       }
 
-      str_info() << "exiting with code " << (int)exitCode << endl;
+      str_info() << "exiting with code " << exitCode << endl;
       return exitCode;
    }
     

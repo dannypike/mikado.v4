@@ -75,7 +75,7 @@ namespace mikado::storage {
 
       str_info() << "shutting down" << endl;
 
-      str_info() << "exiting with code " << (int)exitCode << endl;
+      str_info() << "exiting with code " << exitCode << endl;
       return exitCode;
    }
     
