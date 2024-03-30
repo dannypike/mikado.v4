@@ -18,7 +18,7 @@ set(SRC_FILES
    src/logger.cpp
    src/configure.cpp
    src/program_options.cpp
-)
+ "src/smart_enums.cpp")
 
 add_library(${TARGET} STATIC ${SRC_FILES})
 set(LIBRARY_OUTPUT_PATH ${CMAKE_CURRENT_SOURCE_DIR}/../lib)

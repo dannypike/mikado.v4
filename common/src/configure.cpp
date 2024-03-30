@@ -98,7 +98,7 @@ namespace mikado::common {
       // Get ready to receive any response from the broker
       broker_->setOnMessageCallback([this, &status](ix::WebSocketMessagePtr const &msg) {
          if (msg->type != ix::WebSocketMessageType::Message) {
-            str_warn() << "Received a non-message (type=" << (int)msg->type
+            str_warn() << "Received a non-message (type=" << msg->type
                << ", from the broker, will use local configuration" << endl;
             return;
          }
