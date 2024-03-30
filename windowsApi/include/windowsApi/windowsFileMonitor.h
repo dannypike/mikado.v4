@@ -4,6 +4,7 @@
 #define API_WINDOWS_FILEMON_H
 
 #include "common/errorCodes.h"
+#include "common/smart_enums.h"
 #include "windowsApi/WindowsHandle.h"
 
 namespace mikado::windowsApi {
@@ -12,7 +13,11 @@ namespace mikado::windowsApi {
       typedef mikado::common::MikadoErrorCode MikadoErrorCode; // To reduce typing
 
    public:
-      enum class Action { None, Include, Exclude };
+      ENUM_HPP_CLASS_DECL(Action, int, 
+         (None)
+         (Include)
+         (Exclude)
+      )
 
       struct QueueData {
          std::string json;
