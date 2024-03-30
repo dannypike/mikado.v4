@@ -93,7 +93,9 @@ namespace mikado::globber {
       rootFolder = options->get<path>("root", rootFolder);
 
       // Set up Ctrl-C/break handler, suppress stdout debug-logging and display the banner
-      windowsApi::apiSetupConsole(options->get<string>("console-title"), outputBanner);
+      auto newTitle = options->get<string>("console-title");
+      auto restoreIt = options->get<bool>("console-restore-on-exit");
+      windowsApi::apiSetupConsole(newTitle, restoreIt, outputBanner);
 
       // Run the monitor thread
       auto exitCode = MikadoErrorCode::MKO_ERROR_DID_NOT_RUN;

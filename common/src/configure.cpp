@@ -22,6 +22,7 @@ namespace mikado::common {
          ("broker-port", po::value<int>()->default_value(22304), "broker port")
          ("broker-timeout", po::value<unsigned>()->default_value(2), "broker timeout in seconds")
          ("console-title", po::value<string>()->default_value(consoleTitle), "set the console title")
+         ("console-restore-on-exit", po::value<bool>()->default_value(false), "save and restore the title on exit")
          ("help", "produce help message")
          ;
    }

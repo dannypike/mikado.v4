@@ -9,7 +9,7 @@ namespace mikado::windowsApi {
    std::string getLastErrorAsString(DWORD *lastError = nullptr);
    MikadoErrorCode apiInitialize(int argc, char *argv[]);
    MikadoErrorCode apiSetupConsole(std::string const &consoleTitle
-      , std::function<void()> showBanner);
+      , bool restoreTitle, std::function<void()> showBanner);
    void apiShutdown();
 
 } // namespace mikado::windowsApi
