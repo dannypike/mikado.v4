@@ -10,7 +10,9 @@ namespace mikado::common {
       Configure(std::string const &appId, std::string const &consoleTitle);
       ~Configure() = default;
 
-      boost::program_options::options_description_easy_init addOptions();
+      boost::program_options::options_description_easy_init addOptions() {
+         return options_->add_options();
+      }
       MikadoErrorCode importFile(std::filesystem::path const &cfgFilename);
       MikadoErrorCode importCommandline(int argc, char *argv[]);
       MikadoErrorCode notify();
@@ -23,22 +25,37 @@ namespace mikado::common {
          return *options_;
       }
 
-      bool hasOption(std::string const &name) const {
+      bool has(std::string const &name) const {
          return values_->count(name) > 0;
       }
 
       template <class TT> TT get(std::string const &name) const {
-         if (!hasOption(name)) {
+         if (!has(name)) {
             return TT{};
          }
          return (*values_)[name].as<TT>();
       }
 
       template <class TT> TT get(std::string const &name, TT const &defaultValue) const {
-         if (!hasOption(name)) {
+         if (!has(name)) {
             return defaultValue;
          }
          return (*values_)[name].as<TT>();
+      }
+
+      template <class TT> bool tryGet(std::string const &name, TT &value) const {
+         auto hasValue = has(name); 
+         if (hasValue) {
+            value = (*values_)[name].as<TT>();
+         }
+         return hasValue;
+      }
+
+      template <class TT> bool tryGet(std::string const &name
+            , TT const &defaultValue, TT &value) const {
+         auto hasValue = has(name);
+         value = hasValue ? (*values_)[name].as<TT>() : defaultValue;
+         return hasValue;
       }
 
    protected:

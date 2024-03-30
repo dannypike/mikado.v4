@@ -17,20 +17,14 @@ namespace mikado::common {
       , values_{ make_shared<po::variables_map>() } {
 
       // Add the options that are defined for all Mikado apps
-      options_->add_options()
-         ("broker-host", po::value<string>()->default_value("127.0.0.1"), "broker host")
-         ("broker-port", po::value<int>()->default_value(22304), "broker port")
-         ("broker-timeout", po::value<unsigned>()->default_value(2), "broker timeout in seconds")
-         ("console-title", po::value<string>()->default_value(consoleTitle), "set the console title")
-         ("console-restore-on-exit", po::value<bool>()->default_value(false), "save and restore the title on exit")
-         ("help", "produce help message")
+      addOptions()
+         (common::poBrokerHost.c_str(), po::value<string>()->default_value("127.0.0.1"), "broker host")
+         (common::poBrokerPort.c_str(), po::value<int>()->default_value(22304), "broker port")
+         (common::poBrokerTimeout.c_str(), po::value<unsigned>()->default_value(2), "broker timeout in seconds")
+         (common::poConsoleTitle.c_str(), po::value<string>()->default_value(consoleTitle), "set the console title")
+         (common::poConsoleRestoreOnExit.c_str(), po::value<bool>()->default_value(false), "save and restore the title on exit")
+         (common::poHelp.c_str(), "produce help message")
          ;
-   }
-
-   ///////////////////////////////////////////////////////////////////////////
-   //
-   po::options_description_easy_init Configure::addOptions() {
-      return options_->add_options();
    }
    
    ///////////////////////////////////////////////////////////////////////////
@@ -83,7 +77,7 @@ namespace mikado::common {
    //
    MikadoErrorCode Configure::checkBroker() {
 
-      if (!hasOption("broker-host") && !hasOption("broker-port")) {
+      if (!has(common::poBrokerHost) && !has(common::poBrokerPort)) {
          // We're not using the broker, so carry on with the configuration that we have
          return MikadoErrorCode::MKO_ERROR_NONE;
       }
@@ -166,7 +160,7 @@ namespace mikado::common {
          notify();
       
          // If anything asks for help, that's the only thing we do
-         if (hasOption("help")) {
+         if (has(common::poHelp)) {
             return showHelp(exeName.string(), showBanner);
          }
 

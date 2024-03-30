@@ -28,8 +28,8 @@ namespace mikado::globber {
          , windowsApi::WindowsFileMonitorPtr monitor) {
 
       // The default action if it passes all of the filters
-      if (cfg->hasOption("default")) {
-         auto defaultAction = cfg->get<string>("default");
+      string defaultAction;
+      if (cfg->tryGet(common::poDefault, defaultAction)) {
          if (boost::iequals(defaultAction, "include")) {
             monitor->setDefaultAction(windowsApi::WindowsFileMonitor::Action::Include);
          }
@@ -43,15 +43,16 @@ namespace mikado::globber {
       }
 
       // The various filters
-      if (cfg->hasOption("include")) {
-         for (auto &include : cfg->get<vector<string>>("include")) {
+      vector<string> globs;
+      if (cfg->tryGet(common::poInclude, globs)) {
+         for (auto &include : globs) {
             if (auto rc = monitor->includeGlob(include); MKO_IS_ERROR(rc)) {
                return rc;
             }
          }
       }
-      if (cfg->hasOption("exclude")) {
-         for (auto &exclude : cfg->get<vector<string>>("exclude")) {
+      if (cfg->tryGet(common::poExclude, globs)) {
+         for (auto &exclude : globs) {
             if (auto rc = monitor->excludeGlob(exclude); MKO_IS_ERROR(rc)) {
                return rc;
             }
