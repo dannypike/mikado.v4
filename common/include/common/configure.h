@@ -7,8 +7,13 @@ namespace mikado::common {
 
    class Configure : public std::enable_shared_from_this<Configure> {
    public:
-      Configure(std::string const &appId, std::string const &consoleTitle);
+      Configure(std::string const &appId, std::string const &consoleTitle
+         , BrokerFYI *fyi);
       ~Configure() = default;
+
+      WebSocketPtr broker() const {
+         return brokerWS_;
+      }
 
       boost::program_options::options_description_easy_init addOptions() {
          return options_->add_options();
@@ -59,6 +64,7 @@ namespace mikado::common {
       }
 
    protected:
+      MikadoErrorCode processBrokerMessage(ix::WebSocketMessagePtr const &msg);
       MikadoErrorCode checkBroker();
       MikadoErrorCode showHelp(std::string const &exeName, std::function<void()> showBanner);
       static BOOL WINAPI consoleCtrlHandler(DWORD ctrlType);
@@ -68,14 +74,13 @@ namespace mikado::common {
 
       typedef std::shared_ptr<boost::program_options::options_description> OptionsPtr;
       typedef std::shared_ptr<boost::program_options::variables_map> VariablesPtr;
-      typedef std::shared_ptr<ix::WebSocket> WebSocketPtr;
       OptionsPtr options_;
       VariablesPtr values_;
 
       std::string brokerHost_ { "127.0.0.1" };
       int brokerPort_ = 22304;
       unsigned brokerTimeout_ = 2;
-      WebSocketPtr broker_;
+      WebSocketPtr brokerWS_;
    };
    typedef std::shared_ptr<Configure> ConfigurePtr;
 

@@ -11,7 +11,7 @@ namespace mikado::common {
 
    ///////////////////////////////////////////////////////////////////////////
    //
-   Configure::Configure(string const &appId, string const &consoleTitle)
+   Configure::Configure(string const &appId, string const &consoleTitle, BrokerFYI *fyi)
       : appId_ { appId }
       , options_{ make_shared<po::options_description>() }
       , values_{ make_shared<po::variables_map>() } {
@@ -21,10 +21,28 @@ namespace mikado::common {
          (common::poBrokerHost.c_str(), po::value<string>()->default_value("127.0.0.1"), "broker host")
          (common::poBrokerPort.c_str(), po::value<int>()->default_value(22304), "broker port")
          (common::poBrokerTimeout.c_str(), po::value<unsigned>()->default_value(2), "broker timeout in seconds")
-         (common::poConsoleTitle.c_str(), po::value<string>()->default_value(consoleTitle), "set the console title")
+         (common::poConsoleQuiet.c_str(), po::value<bool>()->default_value(true), "suppress output to console")
          (common::poConsoleRestoreOnExit.c_str(), po::value<bool>()->default_value(false), "save and restore the title on exit")
+         (common::poConsoleTitle.c_str(), po::value<string>()->default_value(consoleTitle), "set the console title")
          (common::poHelp.c_str(), "produce help message")
          ;
+
+      // If we are not the broker, then create a Websocket object to connect to it
+      if (!boost::iequals(appId_, appIdBroker)) {
+         brokerWS_ = make_shared<ix::WebSocket>();
+         brokerWS_->setOnMessageCallback([this, fyi](ix::WebSocketMessagePtr const &msg) {
+            try
+            {
+               if (fyi) {
+                  fyi->onBrokerMessage(brokerWS_, msg);
+               }
+            }
+            catch (const std::exception &e)
+            {
+               log_exception(e);
+            }
+         });
+      }
    }
    
    ///////////////////////////////////////////////////////////////////////////
@@ -73,11 +91,34 @@ namespace mikado::common {
    }
 
    ///////////////////////////////////////////////////////////////////////////
+   // Signing on to the broker
+   //
+   MikadoErrorCode Configure::processBrokerMessage(ix::WebSocketMessagePtr const &msg) {
+      switch (msg->type) {
+      case ix::WebSocketMessageType::Message:
+      {
+         // We have received a message from the broker, use it to reinitialize the configuration
+         istringstream istrm(msg->str);
+         values_ = make_shared<po::variables_map>();
+         po::store(po::parse_config_file(istrm, *options_), *values_, true);
+         notify();
+         return MikadoErrorCode::MKO_STATUS_BROKER_AVAILABLE;
+      }
+
+      default:
+         str_error() << "Received a non-message from the broker (type=" << msg->type
+            << "), will use local configuration" << endl;
+         break;
+      }
+      return MikadoErrorCode::MKO_ERROR_WEBSOCKET;
+   }
+
+   ///////////////////////////////////////////////////////////////////////////
    // Check to see if the broker is available to retrieve the configuration
    //
    MikadoErrorCode Configure::checkBroker() {
 
-      if (!has(common::poBrokerHost) && !has(common::poBrokerPort)) {
+      if (!brokerWS_) {
          // We're not using the broker, so carry on with the configuration that we have
          return MikadoErrorCode::MKO_ERROR_NONE;
       }
@@ -90,34 +131,24 @@ namespace mikado::common {
       brokerPort_ = get<int>("broker-port");
       brokerTimeout_ = get<unsigned>("broker-timeout");
 
-      broker_ = make_shared<ix::WebSocket>();
       string url { "ws://" + get<string>("broker-host") + ":" + to_string(get<int>("broker-port")) };
-      broker_->setUrl(url);
-      broker_->disablePerMessageDeflate();   // It's on the same machine, so we don't need this
+      brokerWS_->setUrl(url);
+      brokerWS_->disablePerMessageDeflate();   // It's on the same machine, so we don't need this
 
       // Get ready to receive any response from the broker
-      broker_->setOnMessageCallback([this, &status](ix::WebSocketMessagePtr const &msg) {
-         if (msg->type != ix::WebSocketMessageType::Message) {
-            str_warn() << "Received a non-message (type=" << msg->type
-               << ", from the broker, will use local configuration" << endl;
-            return;
+      brokerWS_->setOnMessageCallback([this, &status](ix::WebSocketMessagePtr const &msg) {
+         if (auto rc = processBrokerMessage(msg); MKO_IS_ERROR(rc)) {
+            str_error() << "Failed to process broker message, error = " << rc << endl;
+            status = rc;
          }
-
-         // We have received a message from the broker, use it to reinitialize the configuration
-         istringstream istrm(msg->str);
-         values_ = make_shared<po::variables_map>();
-         po::store(po::parse_config_file(istrm, *options_), *values_, true);
-         notify();
-
-         status = MikadoErrorCode::MKO_STATUS_BROKER_AVAILABLE;
-         });
+      });
       
       // Try to connect
-      broker_->start();
+      brokerWS_->start();
 
       // Tell the broker who we are
       json::value hail = { { "appid", appId_ } };
-      broker_->send(serialize(hail));
+      brokerWS_->send(serialize(hail));
 
       // Wait for the broker to respond
       auto startAt = boost::posix_time::second_clock::local_time();

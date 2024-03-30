@@ -24,7 +24,7 @@ namespace mikado::broker {
    //
    static MikadoErrorCode main(int argc, char *argv[]) {
 
-      auto options = make_shared<common::Configure>(common::appIdBroker, "Mikado Broker");
+      auto options = make_shared<common::Configure>(common::appIdBroker, "Mikado Broker", nullptr);
       options->addOptions()
          ;
 
@@ -51,9 +51,7 @@ namespace mikado::broker {
       }
 
       // Set up Ctrl-C/break handler, suppress stdout debug-logging and display the banner
-      auto newTitle = options->get<string>("console-title");
-      auto restoreIt = options->get<bool>("console-restore-on-exit");
-      windowsApi::apiSetupConsole(newTitle, restoreIt, outputBanner);
+      windowsApi::apiSetupConsole(options, outputBanner);
 
       // Dummy loop until we get the system up and running
       auto exitCode = MikadoErrorCode::MKO_ERROR_DID_NOT_RUN;

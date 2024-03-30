@@ -9,6 +9,8 @@ namespace mikado::common {
    extern std::filesystem::path MikadoExeFolder;
    extern bool MikadoShutdownRequested;
 
+   typedef std::shared_ptr<ix::WebSocket> WebSocketPtr;
+
    extern std::string appIdBroker;
    extern std::string appIdGlobber;
    extern std::string appIdStorage;

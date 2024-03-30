@@ -8,6 +8,7 @@ namespace mikado::common {}
 #include "common/algorithms.h"
 #include "common/ascii.h"
 #include "common/errorCodes.h"
+#include "common/fyi.h"
 #include "common/globals.h"
 #include "common/logger.h"
 #include "common/program_options.h"

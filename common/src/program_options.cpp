@@ -10,6 +10,7 @@ namespace mikado::common {
    string const poBrokerPort { "broker-port" };
    string const poBrokerTimeout { "broker-timeout" };
    string const poConsoleRestoreOnExit { "console-restore-on-exit" };
+   string const poConsoleQuiet{ "console-quiet" };
    string const poConsoleTitle { "console-title" };
    string const poDefault { "default" };
    string const poExclude { "exclude" };

@@ -58,12 +58,17 @@ namespace mikado::windowsApi {
 
    ///////////////////////////////////////////////////////////////////////////
    //
-   MikadoErrorCode apiSetupConsole(string const &consoleTitle, bool restoreTitle
-      , function<void()> showBanner) {
+   MikadoErrorCode apiSetupConsole(common::ConfigurePtr options, function<void()> showBanner) {
+
+      auto quiet = options->get<bool>(common::poConsoleQuiet);
+      auto restoreTitle = options->get<bool>(common::poConsoleRestoreOnExit);
+      auto consoleTitle = options->get<string>(common::poConsoleTitle);
 
       // Don't output anything to the console. We do this now just in case there were
       // any errors in the configuration.
-      common::MikadoLog::MikadoLogger.setOutputStdout(false);
+      if (quiet) {
+         common::MikadoLog::MikadoLogger.setOutputStdout(false);
+      }
 
       if (!consoleTitle.empty()) {
          if (restoreTitle) {

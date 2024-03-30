@@ -30,6 +30,10 @@ namespace mikado::broker {
          return MikadoErrorCode::MKO_ERROR_SERVER_LISTEN;
       }
 
+      server_->setOnConnectionCallback(
+         [this](std::weak_ptr<ix::WebSocket>, ConnectionStatePtr state) {
+            str_info() << "websocket connection: " << state->getId() << endl;
+         });
       server_->setOnClientMessageCallback(
          [this](ConnectionStatePtr state, ix::WebSocket &ws, ix::WebSocketMessagePtr const &msg) {
             
@@ -70,8 +74,7 @@ namespace mikado::broker {
          [](WebSocketServerPtr server, MikadoErrorCode *exitCode) {
             server->start();
 
-            // Do we want to support pings from the client?
-            //server->enablePong();
+            str_info() << "websocket is ready" << endl;
 
             server->wait();
             *exitCode = MikadoErrorCode::MKO_ERROR_NONE;

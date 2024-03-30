@@ -10,6 +10,7 @@ namespace mikado::common {
    extern std::string const poBrokerPort;
    extern std::string const poBrokerTimeout;
    extern std::string const poConsoleRestoreOnExit;
+   extern std::string const poConsoleQuiet;
    extern std::string const poConsoleTitle;
    extern std::string const poDefault;
    extern std::string const poExclude;

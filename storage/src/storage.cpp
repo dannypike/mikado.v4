@@ -38,9 +38,40 @@ namespace mikado::storage {
 
    //////////////////////////////////////////////////////////////////////////
    //
+   void Storage::onBrokerMessage(common::WebSocketPtr broker
+         , ix::WebSocketMessagePtr const &msg) {
+
+      broker_ = broker;
+      switch (msg->type) {
+      case ix::WebSocketMessageType::Message:
+         str_info() << "Broker message: " << msg->str << endl;
+         break;
+
+      case ix::WebSocketMessageType::Open:
+         str_info() << "Broker connection opened" << endl;
+         break;
+
+      case ix::WebSocketMessageType::Close:
+         str_info() << "Broker connection closed" << endl;
+         break;
+
+      case ix::WebSocketMessageType::Error:
+         str_error() << "Broker connection error: " << msg->errorInfo.reason << endl;
+         break;
+
+      default:
+         str_error() << "Broker connection unknown message type" << endl;
+         break;
+      }
+   }
+
+   //////////////////////////////////////////////////////////////////////////
+   //
    static MikadoErrorCode main(int argc, char *argv[]) {
 
-      auto options = make_shared<common::Configure>(common::appIdStorage, "Mikado Storage");
+      // The Storage object manages the callbacks from the broker and other services
+      Storage storage;
+      auto options = make_shared<common::Configure>(common::appIdStorage, "Mikado Storage", &storage);
 
       // There is a typical sequence of processing options, that we do for all of the applications
       auto rc = options->defaultProcessing(argc, argv, outputBanner);
@@ -50,12 +81,13 @@ namespace mikado::storage {
       }
 
       // Set up Ctrl-C/break handler, suppress stdout debug-logging and display the banner
-      auto newTitle = options->get<string>("console-title");
-      auto restoreIt = options->get<bool>("console-restore-on-exit");
-      windowsApi::apiSetupConsole(newTitle, restoreIt, outputBanner);
+      windowsApi::apiSetupConsole(options, outputBanner);
 
       auto exitCode = MikadoErrorCode::MKO_ERROR_DID_NOT_RUN;
+      storage.start();
+
       str_info() << "shutting down" << endl;
+      storage.stop();
 
       str_info() << "exiting with code " << exitCode << endl;
       return exitCode;

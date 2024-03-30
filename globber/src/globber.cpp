@@ -63,9 +63,39 @@ namespace mikado::globber {
 
    //////////////////////////////////////////////////////////////////////////
    //
-   static MikadoErrorCode main(int argc, char *argv[]) {
+   void Globber::onBrokerMessage(common::WebSocketPtr broker
+         , ix::WebSocketMessagePtr const &msg) {
 
-      auto options = make_shared<common::Configure>(common::appIdGlobber, "Mikado Globber");
+      broker_ = broker;
+      switch (msg->type) {
+      case ix::WebSocketMessageType::Message:
+         str_info() << "Broker message: " << msg->str << endl;
+         break;
+
+      case ix::WebSocketMessageType::Open:
+         str_info() << "Broker connection opened" << endl;
+         break;
+
+      case ix::WebSocketMessageType::Close:
+         str_info() << "Broker connection closed" << endl;
+         break;
+
+      case ix::WebSocketMessageType::Error:
+         str_error() << "Broker connection error: " << msg->errorInfo.reason << endl;
+         break;
+
+      default:
+         str_error() << "Broker connection unknown message type" << endl;
+         break;
+      }
+   }
+
+   //////////////////////////////////////////////////////////////////////////
+   //
+   static MikadoErrorCode main(int argc, char *argv[]) {
+      
+      Globber globber;
+      auto options = make_shared<common::Configure>(common::appIdGlobber, "Mikado Globber", &globber);
       options->addOptions()
          ("root", po::value<path>()->multitoken(), "the root directory to monitor")
          ("include", po::value<vector<string>>()->multitoken(), "include a file or subfolder (regex)")
@@ -94,9 +124,7 @@ namespace mikado::globber {
       rootFolder = options->get<path>("root", rootFolder);
 
       // Set up Ctrl-C/break handler, suppress stdout debug-logging and display the banner
-      auto newTitle = options->get<string>("console-title");
-      auto restoreIt = options->get<bool>("console-restore-on-exit");
-      windowsApi::apiSetupConsole(newTitle, restoreIt, outputBanner);
+      windowsApi::apiSetupConsole(options, outputBanner);
 
       // Run the monitor thread
       auto exitCode = MikadoErrorCode::MKO_ERROR_DID_NOT_RUN;
