@@ -20,6 +20,7 @@ set(TARGET broker)
 set(SRC_FILES
    src/broker.cpp
    src/handler.cpp
+   src/testConnect.cpp
 )
 
 add_executable(${TARGET} ${SRC_FILES})

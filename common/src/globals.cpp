@@ -14,6 +14,16 @@ namespace mikado::common {
    string appIdGlobber{ "globber" };
    string appIdStorage{ "storage" };
 
+   // Actions are used to identify the type of message in websocket messages
+   string actionConnect{ "connect" };
+
+   // fields are used in websocket messages
+   extern std::string fieldAction{ "action" };
+   extern std::string fieldAppId{ "appid" };
+   extern std::string fieldTimestamp{ "timestamp" };
+   extern std::string fieldType{ "field" };
+   extern std::string fieldVersion{ "version" };
+
    MikadoErrorCode commonInitialize(int argc, char *argv[]) {
       if (argc < 1) {
          return MikadoErrorCode::MKO_ERROR_INVALID_ARGUMENTS;

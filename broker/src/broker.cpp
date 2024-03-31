@@ -1,6 +1,7 @@
 #include "common.h"
 #include "windowsApi.h"
 #include "broker.h"
+#include "broker/testConnect.h"
 
 namespace windowsApi = mikado::windowsApi;
 namespace common = mikado::common;
@@ -53,13 +54,19 @@ namespace mikado::broker {
       // Set up Ctrl-C/break handler, suppress stdout debug-logging and display the banner
       windowsApi::apiSetupConsole(options, outputBanner);
 
+      // Test the startup protocol
+      testConnect(options);
+
       // Dummy loop until we get the system up and running
       auto exitCode = MikadoErrorCode::MKO_ERROR_NONE;
       while (!common::MikadoShutdownRequested) {
-         this_thread::sleep_for(100ms);
+         if (!testProcess()) {
+            this_thread::sleep_for(100ms);
+         }
       }
 
       str_info() << "shutting down" << endl;
+      testShutdown();
       server->shutdown();
       if (!ix::uninitNetSystem()) {
          str_error() << "Failed to shut down the websocket API" << endl;
