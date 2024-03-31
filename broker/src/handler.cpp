@@ -25,105 +25,25 @@ namespace mikado::broker {
 
       server_ = make_shared<ix::WebSocketServer>(port_, interface_.c_str());
       if (auto result = server_->listen(); !result.first) {
-         str_error() << "failed to list on port " << port_ << ", interface "
-            << interface_ << ": " << result.second << endl;
+         str_error() << "failed to listen on " << interface_ << ":" << port_ << " - " << result.second << endl;
          return MikadoErrorCode::MKO_ERROR_SERVER_LISTEN;
       }
 
-      server_->setOnConnectionCallback(
-         [this](std::weak_ptr<ix::WebSocket> webSocket, ConnectionStatePtr state) {
-            stringstream ss;
-            ss << "Remote ip: " << state->getRemoteIp() << std::endl;
-
-            auto ws = webSocket.lock();
-            if (ws)
-            {
-               ws->setOnMessageCallback(
-                  [webSocket, state](ix::WebSocketMessagePtr const &msg)
-                  {
-                     stringstream ss;
-                     if (msg->type == ix::WebSocketMessageType::Open)
-                     {
-                        ss << "New connection" << std::endl;
-
-                        // A connection state object is available, and has a default id
-                        // You can subclass ConnectionState and pass an alternate factory
-                        // to override it. It is useful if you want to store custom
-                        // attributes per connection (authenticated bool flag, attributes, etc...)
-                        ss << "id: " << state->getId() << std::endl;
-
-                        // The uri the client did connect to.
-                        ss << "Uri: " << msg->openInfo.uri << std::endl;
-
-                        ss << "Headers:" << std::endl;
-                        for (auto it : msg->openInfo.headers)
-                        {
-                           ss << it.first << ": " << it.second << std::endl;
-                        }
-                        str_info() << ss.rdbuf();
-                     }
-                     else if (msg->type == ix::WebSocketMessageType::Message)
-                     {
-                        // For an echo server, we just send back to the client whatever was received by the server
-                        // All connected clients are available in an std::set. See the broadcast cpp example.
-                        // Second parameter tells whether we are sending the message in binary or text mode.
-                        // Here we send it in the same mode as it was received.
-                        auto ws = webSocket.lock();
-                        if (ws)
-                        {
-                           ws->send(msg->str, msg->binary);
-                        }
-                     }
-                  }
-               );
-            }
-         });
       server_->setOnClientMessageCallback(
          [this](ConnectionStatePtr state, ix::WebSocket &ws, ix::WebSocketMessagePtr const &msg) {
-            
-            switch (msg->type) {
-            case ix::WebSocketMessageType::Error:
-               onError(ws, state, msg);
-               break;
-
-            case ix::WebSocketMessageType::Open:
-               onOpen(ws, state, msg);
-               break;
-
-            case ix::WebSocketMessageType::Close:
-               onClose(ws, state, msg);
-               break;
-
-            case ix::WebSocketMessageType::Ping:
-               ws.sendText("pong");
-               break;
-
-            case ix::WebSocketMessageType::Pong:
-               ws.sendText("pong");
-               break;
-
-            case ix::WebSocketMessageType::Message:
-               onMessage(ws, state, msg);
-               break;
-
-            default:
-               str_error() << "unknown message type: " << (int)msg->type << endl;
-               break;
+            try
+            {
+               onClientMessageCallback(state, ws, msg);
+            }
+            catch (const exception &e)
+            {
+               log_exception(e);
             }
          });
 
-      // Run the monitor thread
       MikadoErrorCode exitCode = MikadoErrorCode::MKO_ERROR_NONE;
-      serverThread_ = make_shared<jthread>(
-         [](WebSocketServerPtr server, MikadoErrorCode *exitCode) {
-            server->start();
-
-            str_info() << "websocket is ready" << endl;
-
-            server->wait();
-            *exitCode = MikadoErrorCode::MKO_ERROR_NONE;
-         }, server_, &exitCode);
-
+      server_->start();
+      str_info() << "websocket is listening on " << interface_ << ":" << port_ << endl;
       return exitCode;
    }
 
@@ -134,9 +54,70 @@ namespace mikado::broker {
       if (server_) {
          server_->stop();
       }
+   }
 
-      // Wait for the thread to join
-      serverThread_.reset();
+   ///////////////////////////////////////////////////////////////////////////
+   //
+   void Handler::onConnectionCallback(weak_ptr<ix::WebSocket> webSocket
+         , ConnectionStatePtr state) {
+      stringstream ss;
+      ss << "Remote ip: " << state->getRemoteIp() << endl;
+
+      // Register with the client's socket to receive messages
+      if (auto ws = webSocket.lock(); ws)
+      {
+         ws->setOnMessageCallback(
+            [ws, state, this](ix::WebSocketMessagePtr const &msg) {
+               try
+               {
+                  onClientMessageCallback(state, *ws, msg);
+               }
+               catch (const std::exception &e)
+               {
+                  log_exception(e);
+               }
+            });
+      }
+      else {
+         str_warn() << "websocket pointer is invalid" << endl;
+         return;
+      }
+   }
+
+   ///////////////////////////////////////////////////////////////////////////
+   //
+   void Handler::onClientMessageCallback(ConnectionStatePtr state
+         , ix::WebSocket &ws, ix::WebSocketMessagePtr const &msg) {
+
+      switch (msg->type) {
+      case ix::WebSocketMessageType::Error:
+         onError(ws, state, msg);
+         break;
+
+      case ix::WebSocketMessageType::Open:
+         onOpen(ws, state, msg);
+         break;
+
+      case ix::WebSocketMessageType::Close:
+         onClose(ws, state, msg);
+         break;
+
+      case ix::WebSocketMessageType::Ping:
+         ws.sendText("pong");
+         break;
+
+      case ix::WebSocketMessageType::Pong:
+         ws.sendText("pong");
+         break;
+
+      case ix::WebSocketMessageType::Message:
+         onMessage(ws, state, msg);
+         break;
+
+      default:
+         str_error() << "unknown message type: " << (int)msg->type << endl;
+         break;
+      }
    }
 
    ///////////////////////////////////////////////////////////////////////////
@@ -148,18 +129,27 @@ namespace mikado::broker {
 
    ///////////////////////////////////////////////////////////////////////////
    //
-   void Handler::onOpen(ix::WebSocket &ws
-      , ConnectionStatePtr state, ix::WebSocketMessagePtr const &msg) {
-      str_info() << "websocket connection open: " << state->getId() << endl;
+   void Handler::onOpen(ix::WebSocket &ws, ConnectionStatePtr state
+         , ix::WebSocketMessagePtr const &msg) {
+
+      stringstream ss;
+      ss << "New connection" << endl;
+
+      // A connection state object is available, and has a default id
+      // You can subclass ConnectionState and pass an alternate factory
+      // to override it. It is useful if you want to store custom
+      // attributes per connection (authenticated bool flag, attributes, etc...)
+      ss << "id: " << state->getId() << endl;
 
       // The uri the client did connect to.
-      str_debug() << "Uri: " << msg->openInfo.uri << std::endl;
+      ss << "Uri: " << msg->openInfo.uri << endl;
 
-      str_debug() << "Headers:" << std::endl;
+      ss << "Headers:" << endl;
       for (auto it : msg->openInfo.headers)
       {
-         str_debug() << "   " << it.first << ": " << it.second << std::endl;
+         ss << it.first << ": " << it.second << endl;
       }
+      str_info() << ss.rdbuf();
    }
 
    ///////////////////////////////////////////////////////////////////////////

@@ -9,7 +9,6 @@ namespace mikado::broker {
       typedef std::shared_ptr<ix::WebSocket> WebSocketPtr;
       typedef std::shared_ptr<ix::WebSocketServer> WebSocketServerPtr;
       typedef std::shared_ptr<ix::ConnectionState> ConnectionStatePtr;
-      typedef std::shared_ptr<std::jthread> ThreadPtr;
 
    public:
       Handler() = default;
@@ -20,6 +19,8 @@ namespace mikado::broker {
       void shutdown();
 
    protected: 
+      void onConnectionCallback(std::weak_ptr<ix::WebSocket> webSocket, ConnectionStatePtr state);
+      void onClientMessageCallback(ConnectionStatePtr state, ix::WebSocket &ws, ix::WebSocketMessagePtr const &msg);
       void onError(ix::WebSocket &ws, ConnectionStatePtr state, ix::WebSocketMessagePtr const &msg);
       void onOpen(ix::WebSocket &ws, ConnectionStatePtr state, ix::WebSocketMessagePtr const &msg);
       void onMessage(ix::WebSocket &ws, ConnectionStatePtr state, ix::WebSocketMessagePtr const &msg);
@@ -29,7 +30,6 @@ namespace mikado::broker {
       int port_ = 22304;
       std::string interface_ { "127.0.0.1" };
       WebSocketServerPtr server_;
-      ThreadPtr serverThread_;
    };
 
    typedef std::shared_ptr<Handler> HandlerPtr;

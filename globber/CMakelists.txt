@@ -19,6 +19,7 @@ set(API_FOLDER ${CMAKE_CURRENT_SOURCE_DIR}/../windowsApi)
 set(LIB_FOLDER ${CMAKE_CURRENT_SOURCE_DIR}/../lib)
 
 include(${CMAKE_FOLDER}/header.cmake)
+set(DUMP_VARIABLES FALSE)
 
 set(PROJECT_NAME Globber)
 set(TARGET globber)
@@ -62,7 +63,7 @@ target_precompile_headers(${TARGET} PRIVATE
 	<openssl/x509.h>
 
 	# IXWebsocket
-	<ixwebsocket/IXWebSocketServer.h>
+	${CMAKE_SOURCE_DIR}/IXWebSocket/ixwebsocket/IXWebSocketServer.h>
 
    # Boost
    <boost/algorithm/string/predicate.hpp>
@@ -83,8 +84,11 @@ find_package(OpenSSL REQUIRED)
 target_link_libraries(${TARGET} PRIVATE ${OPENSSL_LIBRARIES})
 target_link_libraries(${TARGET} PRIVATE Crypt32 d3d9.lib)
 
-find_package(ixwebsocket CONFIG REQUIRED)
 #add_subdirectory(${CMAKE_SOURCE_DIR}/IXWebSocket)
-target_link_libraries(${TARGET} PRIVATE ixwebsocket::ixwebsocket)
+#find_package(ixwebsocket CONFIG REQUIRED)
+#target_link_libraries(${TARGET} PRIVATE ixwebsocket::ixwebsocket)
+
+find_package(ZLib REQUIRED)
+target_link_libraries(${TARGET} PRIVATE ${CMAKE_SOURCE_DIR}/IXWebSocket/build/Debug/ixwebsocket.lib ws2_32.lib ${ZLIB_LIBRARIES})
 
 include(${CMAKE_FOLDER}/footer.cmake)
