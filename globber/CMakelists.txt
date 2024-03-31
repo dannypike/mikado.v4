@@ -34,6 +34,9 @@ set(EXECUTABLE_OUTPUT_PATH ${CMAKE_CURRENT_SOURCE_DIR}/../bin)
 set_target_properties(${TARGET} PROPERTIES OUTPUT_NAME ${TARGET})
 set_property(TARGET ${TARGET} PROPERTY CXX_STANDARD 20)	# std::jthread requires C++20
 
+# Include ixWebSocket stuff
+include(${CMAKE_FOLDER}/ixwebsocket.cmake)
+
 target_include_directories(${TARGET} PUBLIC
    ${COMMON_FOLDER}/include
    ${API_FOLDER}/include
@@ -63,7 +66,7 @@ target_precompile_headers(${TARGET} PRIVATE
 	<openssl/x509.h>
 
 	# IXWebsocket
-	${CMAKE_SOURCE_DIR}/IXWebSocket/ixwebsocket/IXWebSocketServer.h>
+   ${IXWEBSOCKET_INCLUDE_FILES}
 
    # Boost
    <boost/algorithm/string/predicate.hpp>
@@ -83,12 +86,5 @@ target_link_libraries(${TARGET} PRIVATE ${Boost_LIBRARIES})
 find_package(OpenSSL REQUIRED)
 target_link_libraries(${TARGET} PRIVATE ${OPENSSL_LIBRARIES})
 target_link_libraries(${TARGET} PRIVATE Crypt32 d3d9.lib)
-
-#add_subdirectory(${CMAKE_SOURCE_DIR}/IXWebSocket)
-#find_package(ixwebsocket CONFIG REQUIRED)
-#target_link_libraries(${TARGET} PRIVATE ixwebsocket::ixwebsocket)
-
-find_package(ZLib REQUIRED)
-target_link_libraries(${TARGET} PRIVATE ${CMAKE_SOURCE_DIR}/IXWebSocket/build/Debug/ixwebsocket.lib ws2_32.lib ${ZLIB_LIBRARIES})
 
 include(${CMAKE_FOLDER}/footer.cmake)

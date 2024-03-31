@@ -133,7 +133,7 @@ namespace mikado::globber {
          }, monitor, rootFolder, &exitCode);
 
       // Test the startup protocol
-      bool runTestConnector = false;
+      bool runTestConnector = true;
       bool sendTestMessage = true;
       if (runTestConnector) {
          common::testConnect(options);

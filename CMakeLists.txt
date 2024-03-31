@@ -4,6 +4,14 @@ cmake_minimum_required (VERSION 3.25)
 
 project(MikadoV4)
 
+set(USE_GITHUB_IXWEBSOCKET TRUE)
+if (USE_GITHUB_IXWEBSOCKET)
+   message("Compiling using local sources for ixWebsocket")
+   set(IXWEBSOCKET_INCLUDE_FILES "${CMAKE_SOURCE_DIR}/IXWebSocket/ixwebsocket/IXWebSocketServer.h>")
+else()
+   set(IXWEBSOCKET_INCLUDE_FILES <ixwebsocket/IXWebSocketServer.h>)
+endif()
+
 add_subdirectory(cfg)
 add_subdirectory(common)
 add_subdirectory(windowsApi)
