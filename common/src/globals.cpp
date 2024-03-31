@@ -9,7 +9,7 @@ namespace mikado::common {
    path MikadoExeFolder;
    bool MikadoShutdownRequested = false;
 
-   // The appIds are used to identify each application over the web sockets and elsewhere   
+   // AppIds are used to identify the sending application in websocket messages
    string appIdBroker { "broker" };
    string appIdGlobber{ "globber" };
    string appIdStorage{ "storage" };

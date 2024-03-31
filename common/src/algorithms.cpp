@@ -133,6 +133,17 @@ namespace mikado::common {
 
    ///////////////////////////////////////////////////////////////////////
    //
+   string formatTimestamp() {
+      struct tm tmStruct;
+      time_t now = time(nullptr);
+      if (0 != gmtime_s(&tmStruct, &now)) {
+         return string("<gmtime_s failed>");
+      }
+      return formatTime("%FZ%H:%M:%S", &tmStruct);
+   }
+
+   ///////////////////////////////////////////////////////////////////////
+   //
    path lexicalPath(path const &filename, bool ensureAbsolute
       , path const *fromFolder) {
       path result;

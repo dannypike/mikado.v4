@@ -21,6 +21,7 @@ namespace mikado::common {
    std::string formatTime(std::string const &format, boost::posix_time::ptime const &time);
    std::string formatTime(std::string const &format, struct tm const *timeToUse = nullptr);
    std::string formatNow(char const *format = nullptr);
+   std::string formatTimestamp();
 
    std::filesystem::path lexicalPath(std::filesystem::path const &filename, bool ensureAbsolute = true
       , std::filesystem::path const *fromFolder = nullptr);

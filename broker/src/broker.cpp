@@ -54,7 +54,7 @@ namespace mikado::broker {
       windowsApi::apiSetupConsole(options, outputBanner);
 
       // Dummy loop until we get the system up and running
-      auto exitCode = MikadoErrorCode::MKO_ERROR_DID_NOT_RUN;
+      auto exitCode = MikadoErrorCode::MKO_ERROR_NONE;
       while (!common::MikadoShutdownRequested) {
          this_thread::sleep_for(100ms);
       }

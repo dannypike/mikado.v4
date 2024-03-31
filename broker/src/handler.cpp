@@ -14,8 +14,8 @@ namespace mikado::broker {
    ///////////////////////////////////////////////////////////////////////////
    //
    MikadoErrorCode Handler::configure(common::ConfigurePtr cfg) {
-      port_ = cfg->get<int>("port");
-      interface_ = cfg->get<string>("interface", interface_);
+      port_ = cfg->get<int>(common::poBrokerPort);
+      interface_ = cfg->get<string>(common::poBrokerHost, interface_);
       return MikadoErrorCode::MKO_ERROR_NONE;
    }
 
@@ -31,8 +31,52 @@ namespace mikado::broker {
       }
 
       server_->setOnConnectionCallback(
-         [this](std::weak_ptr<ix::WebSocket>, ConnectionStatePtr state) {
-            str_info() << "websocket connection: " << state->getId() << endl;
+         [this](std::weak_ptr<ix::WebSocket> webSocket, ConnectionStatePtr state) {
+            stringstream ss;
+            ss << "Remote ip: " << state->getRemoteIp() << std::endl;
+
+            auto ws = webSocket.lock();
+            if (ws)
+            {
+               ws->setOnMessageCallback(
+                  [webSocket, state](ix::WebSocketMessagePtr const &msg)
+                  {
+                     stringstream ss;
+                     if (msg->type == ix::WebSocketMessageType::Open)
+                     {
+                        ss << "New connection" << std::endl;
+
+                        // A connection state object is available, and has a default id
+                        // You can subclass ConnectionState and pass an alternate factory
+                        // to override it. It is useful if you want to store custom
+                        // attributes per connection (authenticated bool flag, attributes, etc...)
+                        ss << "id: " << state->getId() << std::endl;
+
+                        // The uri the client did connect to.
+                        ss << "Uri: " << msg->openInfo.uri << std::endl;
+
+                        ss << "Headers:" << std::endl;
+                        for (auto it : msg->openInfo.headers)
+                        {
+                           ss << it.first << ": " << it.second << std::endl;
+                        }
+                        str_info() << ss.rdbuf();
+                     }
+                     else if (msg->type == ix::WebSocketMessageType::Message)
+                     {
+                        // For an echo server, we just send back to the client whatever was received by the server
+                        // All connected clients are available in an std::set. See the broadcast cpp example.
+                        // Second parameter tells whether we are sending the message in binary or text mode.
+                        // Here we send it in the same mode as it was received.
+                        auto ws = webSocket.lock();
+                        if (ws)
+                        {
+                           ws->send(msg->str, msg->binary);
+                        }
+                     }
+                  }
+               );
+            }
          });
       server_->setOnClientMessageCallback(
          [this](ConnectionStatePtr state, ix::WebSocket &ws, ix::WebSocketMessagePtr const &msg) {
