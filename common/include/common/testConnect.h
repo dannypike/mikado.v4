@@ -3,7 +3,7 @@
 #if !defined(CMN_TEST_CONNECT_H)
 #define CMN_TEST_CONNECT_H
 
-namespace mikado::broker {
+namespace mikado::common {
 
 void testConnect(common::ConfigurePtr options);  // simulate a connection from another application
 bool testProcess();  // idle method to simulate processing

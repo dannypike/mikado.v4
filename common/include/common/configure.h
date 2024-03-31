@@ -24,7 +24,7 @@ namespace mikado::common {
 
       // Many of the applications behave the same when when scanning options
       MikadoErrorCode defaultProcessing(int argc, char *argv[]
-         , std::function<void()> showBanner);
+         , std::function<void()> showBanner, bool useBroker = true);
 
       boost::program_options::options_description const &description() const {
          return *options_;

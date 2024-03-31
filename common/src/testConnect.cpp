@@ -1,10 +1,8 @@
 #include "common.h"
-#include "windowsApi.h"
 
 namespace blf = boost::lockfree;
 namespace json = boost::json;
 namespace common = mikado::common;
-namespace windowsApi = mikado::windowsApi;
 typedef common::MikadoErrorCode MikadoErrorCode;
 using namespace std;
 using namespace std::filesystem;
@@ -12,7 +10,7 @@ using namespace std::filesystem;
 // Simulate a connection from another application
 ix::WebSocket WSS;
 
-namespace mikado::broker {
+namespace mikado::common {
 
    static void processIncoming(ix::WebSocketMessagePtr const &msg) {
       if (msg->type == ix::WebSocketMessageType::Open) {
@@ -31,6 +29,7 @@ namespace mikado::broker {
 
    typedef blf::spsc_queue<string, blf::capacity<1024>> TestQueue;
    TestQueue SendingQueue;
+
    void testConnect(common::ConfigurePtr options) {
 
       auto port = options->get<int>(common::poBrokerPort);
@@ -80,4 +79,4 @@ namespace mikado::broker {
       }
    }
 
-} // namespace mikado::broker
+} // namespace mikado::common

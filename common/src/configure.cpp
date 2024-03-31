@@ -165,7 +165,7 @@ namespace mikado::common {
    ///////////////////////////////////////////////////////////////////////////
    //
    MikadoErrorCode Configure::defaultProcessing(int argc, char *argv[]
-      , function<void()> showBanner) {
+      , function<void()> showBanner, bool useBroker) {
 
       try
       {
@@ -196,7 +196,7 @@ namespace mikado::common {
          }
 
          // If we are not the broker, see if we can connect to one
-         if (!boost::iequals(appId_, common::appIdBroker)) {
+         if (useBroker && !boost::iequals(appId_, common::appIdBroker)) {
             // If the command-line includes broker connections, then we connect to the broker
             // to get a new configuration
             auto rc = checkBroker();

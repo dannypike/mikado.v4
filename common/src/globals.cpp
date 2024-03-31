@@ -1,5 +1,7 @@
 // Copyright (c) 2024 Gamaliel Ltd
+#include "common/errorCodes.h"
 #include "common/globals.h"
+#include "common/logger.h"
 
 using namespace std;
 using namespace filesystem;
@@ -24,7 +26,15 @@ namespace mikado::common {
    extern std::string fieldType{ "field" };
    extern std::string fieldVersion{ "version" };
 
-   MikadoErrorCode commonInitialize(int argc, char *argv[]) {
+   MikadoErrorCode commonInitialize(int argc, char *argv[], function<void()> outputBanner) {
+      if (!ix::initNetSystem()) {
+         if (outputBanner) {
+            outputBanner();
+         }
+         str_error() << "Failed to initialize the websocket API" << endl;
+         return MikadoErrorCode::MKO_ERROR_WEBSOCKET;
+      }
+
       if (argc < 1) {
          return MikadoErrorCode::MKO_ERROR_INVALID_ARGUMENTS;
       }
@@ -33,6 +43,9 @@ namespace mikado::common {
    }
 
    void commonShutdown() {
+      if (!ix::uninitNetSystem()) {
+         str_error() << "Failed to shut down the websocket API" << endl;
+      }
    }
 
 } // namespace mikado::common

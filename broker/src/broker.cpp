@@ -1,7 +1,6 @@
 #include "common.h"
 #include "windowsApi.h"
 #include "broker.h"
-#include "broker/testConnect.h"
 
 namespace windowsApi = mikado::windowsApi;
 namespace common = mikado::common;
@@ -36,12 +35,6 @@ namespace mikado::broker {
          return rc;
       }
 
-      if (!ix::initNetSystem()) {
-         outputBanner();
-         str_error() << "Failed to initialize the websocket API" << endl;
-         return MikadoErrorCode::MKO_ERROR_WEBSOCKET;
-      }
-
       // Start the WebSocket server
       HandlerPtr server = make_shared<Handler>();
       if (auto rc = server->configure(options); MKO_IS_ERROR(rc)) {
@@ -55,27 +48,27 @@ namespace mikado::broker {
       windowsApi::apiSetupConsole(options, outputBanner);
 
       // Test the startup protocol
-      testConnect(options);
-
+      bool runTestConnector = false;
+      if (runTestConnector) {
+         common::testConnect(options);
+      }
+      
       // Dummy loop until we get the system up and running
       auto exitCode = MikadoErrorCode::MKO_ERROR_NONE;
       while (!common::MikadoShutdownRequested) {
-         if (!testProcess()) {
-            this_thread::sleep_for(100ms);
+         if (runTestConnector && common::testProcess()) {
+            continue;
          }
+
+         this_thread::sleep_for(100ms);
       }
 
       str_info() << "shutting down" << endl;
-      testShutdown();
-      server->shutdown();
-      if (!ix::uninitNetSystem()) {
-         str_error() << "Failed to shut down the websocket API" << endl;
-         if (!MKO_IS_ERROR(exitCode)) { 
-            exitCode = MikadoErrorCode::MKO_ERROR_WEBSOCKET;
-         }
+      if (runTestConnector) {
+         common::testShutdown();
       }
+      server->shutdown();
 
-      str_info() << "exiting with code " << exitCode << endl;
       return exitCode;
    }
     
@@ -84,17 +77,20 @@ namespace mikado::broker {
 //////////////////////////////////////////////////////////////////////////
 //
 int main(int argc, char *argv[]) {
-    if (auto rc = common::commonInitialize(argc, argv); MKO_IS_ERROR(rc)) {
-        return (int)rc;
-    }
-    if (auto rc = windowsApi::apiInitialize(argc, argv); MKO_IS_ERROR(rc)) {
-        return (int)rc;
-    }
+   auto rc = common::commonInitialize(argc, argv, mikado::broker::outputBanner);
+   if (MKO_IS_ERROR(rc)) {
+      return (int)rc;
+   }
+   if (auto rc = windowsApi::apiInitialize(argc, argv); MKO_IS_ERROR(rc)) {
+      return (int)rc;
+   }
 
-    int exitCode = (int)mikado::broker::main(argc, argv);
-    assert(STATUS_PENDING != exitCode);   // Not allowed to return 259 from any process in Windows, as it is reserved for the system.
+   int exitCode = (int)mikado::broker::main(argc, argv);
+   assert(STATUS_PENDING != exitCode);   // Not allowed to return 259 from any process in Windows, as it is reserved for the system.
     
-    windowsApi::apiShutdown();
-    common::commonShutdown();
-    return exitCode;
+   windowsApi::apiShutdown();
+   common::commonShutdown();
+
+   str_info() << "exiting with code " << exitCode << endl;
+   return exitCode;
 }

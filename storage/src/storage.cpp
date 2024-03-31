@@ -89,7 +89,6 @@ namespace mikado::storage {
       str_info() << "shutting down" << endl;
       storage.stop();
 
-      str_info() << "exiting with code " << exitCode << endl;
       return exitCode;
    }
     
@@ -98,7 +97,7 @@ namespace mikado::storage {
 //////////////////////////////////////////////////////////////////////////
 //
 int main(int argc, char *argv[]) {
-    if (auto rc = common::commonInitialize(argc, argv); MKO_IS_ERROR(rc)) {
+    if (auto rc = common::commonInitialize(argc, argv, mikado::storage::outputBanner); MKO_IS_ERROR(rc)) {
         return (int)rc;
     }
     if (auto rc = windowsApi::apiInitialize(argc, argv); MKO_IS_ERROR(rc)) {
@@ -110,5 +109,7 @@ int main(int argc, char *argv[]) {
     
     windowsApi::apiShutdown();
     common::commonShutdown();
+
+    str_info() << "exiting with code " << exitCode << endl;
     return exitCode;
 }

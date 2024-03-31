@@ -104,7 +104,7 @@ namespace mikado::globber {
          ;
 
       // There is a typical sequence of processing options, that we do for all of the applications
-      auto rc = options->defaultProcessing(argc, argv, outputBanner);
+      auto rc = options->defaultProcessing(argc, argv, outputBanner, false);
       if (MikadoErrorCode::MKO_ERROR_NONE != rc) { // May be an MKO_STATUS, so we don't use MKO_IS_ERROR() here
          // Already output a message
          return rc;
@@ -132,16 +132,32 @@ namespace mikado::globber {
          *exitCode = monitor->run(rootFolder);
          }, monitor, rootFolder, &exitCode);
 
+      // Test the startup protocol
+      bool runTestConnector = false;
+      bool sendTestMessage = true;
+      if (runTestConnector) {
+         common::testConnect(options);
+      }
+
       // Wait for the monitor to detect changes to files and write them to cout
       while (!common::MikadoShutdownRequested) {
-         if (!updateQueue->consume_one([](api::WindowsFileMonitor::QueueDataPtr queueData) {
+         if (!updateQueue->consume_all(
+            [](api::WindowsFileMonitor::QueueDataPtr queueData) {
                cout << queueData->json << endl;
                })) {
             this_thread::sleep_for(10ms);
          }
+
+         if (runTestConnector && sendTestMessage && common::testProcess()) {
+            continue;
+         }
       }
 
       str_info() << "shutting down" << endl;
+      if (runTestConnector) {
+         common::testShutdown();
+      }
+
       for (auto mm : FileMonitors) {
          mm->stopMonitoring();
       }
@@ -157,17 +173,19 @@ namespace mikado::globber {
 //
 int main(int argc, char *argv[]) {
 
-   if (auto rc = common::commonInitialize(argc, argv); MKO_IS_ERROR(rc)) {
-        return (int)rc;
-    }
-    if (auto rc = windowsApi::apiInitialize(argc, argv); MKO_IS_ERROR(rc)) {
-        return (int)rc;
-    }
+   if (auto rc = common::commonInitialize(argc, argv, mikado::globber::outputBanner); MKO_IS_ERROR(rc)) {
+      return (int)rc;
+   }
+   if (auto rc = windowsApi::apiInitialize(argc, argv); MKO_IS_ERROR(rc)) {
+      return (int)rc;
+   }
 
-    int exitCode = (int)mikado::globber::main(argc, argv);
-    assert(STATUS_PENDING != exitCode);   // Not allowed to return 259 from any process in Windows, as it is reserved for the system.
+   int exitCode = (int)mikado::globber::main(argc, argv);
+   assert(STATUS_PENDING != exitCode);   // Not allowed to return 259 from any process in Windows, as it is reserved for the system.
     
-    windowsApi::apiShutdown();
-    common::commonShutdown();
-    return exitCode;
+   windowsApi::apiShutdown();
+   common::commonShutdown();
+
+   str_info() << "exiting with code " << exitCode << endl;
+   return exitCode;
 }

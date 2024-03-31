@@ -13,5 +13,6 @@ namespace mikado::common {}
 #include "common/logger.h"
 #include "common/program_options.h"
 #include "common/configure.h"
+#include "common/testConnect.h"
 
 #endif // MKO_COMMON_H     

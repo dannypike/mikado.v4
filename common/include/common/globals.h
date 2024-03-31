@@ -29,7 +29,7 @@ namespace mikado::common {
    // Actions are used to identify the type of message in websocket messages
    extern std::string actionConnect;
 
-   MikadoErrorCode commonInitialize(int argc, char *argv[]);
+   MikadoErrorCode commonInitialize(int argc, char *argv[], std::function<void()> outputBanner);
    void commonShutdown();
 } // namespace mikado::common
 
