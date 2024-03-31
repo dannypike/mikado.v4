@@ -35,19 +35,21 @@ namespace mikado::broker {
          return rc;
       }
 
-      // Start the WebSocket server
-      HandlerPtr server = make_shared<Handler>();
-      if (auto rc = server->configure(options); MKO_IS_ERROR(rc)) {
+      // Start the WebSocket handler
+      HandlerPtr handler = make_shared<Handler>();
+      if (auto rc = handler->configureHandler(options); MKO_IS_ERROR(rc)) {
          return rc;
       }
-      if (auto rc = server->initialize(); MKO_IS_ERROR(rc)) {
+      if (auto rc = handler->initializeHandler(); MKO_IS_ERROR(rc)) {
          return rc;
       }
 
       // Set up Ctrl-C/break handler, suppress stdout debug-logging and display the banner
       windowsApi::apiSetupConsole(options, outputBanner);
 
-      // Test the startup protocol
+      str_notice() << "Broker is listening for connections on " << handler->getUrl() << endl;
+
+      // Test the startup protocol (normally disabled)
       bool runTestConnector = false;
       if (runTestConnector) {
          common::testConnect(options);
@@ -63,11 +65,11 @@ namespace mikado::broker {
          this_thread::sleep_for(100ms);
       }
 
-      str_info() << "shutting down" << endl;
+      str_notice() << "Broker is shutting down" << endl;
       if (runTestConnector) {
          common::testShutdown();
       }
-      server->shutdown();
+      handler->shutdown();
 
       return exitCode;
    }

@@ -13,7 +13,7 @@ namespace mikado::broker {
 
    ///////////////////////////////////////////////////////////////////////////
    //
-   MikadoErrorCode Handler::configure(common::ConfigurePtr cfg) {
+   MikadoErrorCode Handler::configureHandler(common::ConfigurePtr cfg) {
       port_ = cfg->get<int>(common::poBrokerPort);
       interface_ = cfg->get<string>(common::poBrokerHost, interface_);
       return MikadoErrorCode::MKO_ERROR_NONE;
@@ -21,11 +21,12 @@ namespace mikado::broker {
 
    ///////////////////////////////////////////////////////////////////////////
    //
-   MikadoErrorCode Handler::initialize() {
+   MikadoErrorCode Handler::initializeHandler() {
 
       server_ = make_shared<ix::WebSocketServer>(port_, interface_.c_str());
       if (auto result = server_->listen(); !result.first) {
-         str_error() << "failed to listen on " << interface_ << ":" << port_ << " - " << result.second << endl;
+         str_error() << "failed to listen on " << interface_
+            << ":" << port_ << " - " << result.second << endl;
          return MikadoErrorCode::MKO_ERROR_SERVER_LISTEN;
       }
 
@@ -43,7 +44,6 @@ namespace mikado::broker {
 
       MikadoErrorCode exitCode = MikadoErrorCode::MKO_ERROR_NONE;
       server_->start();
-      str_info() << "websocket is listening on " << interface_ << ":" << port_ << endl;
       return exitCode;
    }
 

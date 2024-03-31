@@ -1,6 +1,7 @@
 #pragma once
 // Copyright (c) 2024 Gamaliel Ltd
-#if !defined(HANDLER_H)
+#if !defined(BRK_HANDLER_H)
+#define BRK_HANDLER_H
 
 namespace mikado::broker {
 
@@ -14,9 +15,12 @@ namespace mikado::broker {
       Handler() = default;
       ~Handler() = default;
 
-      MikadoErrorCode configure(common::ConfigurePtr cfg);
-      MikadoErrorCode initialize();
+      MikadoErrorCode configureHandler(common::ConfigurePtr cfg);
+      MikadoErrorCode initializeHandler();
       void shutdown();
+      std::string getUrl() const {
+         return "ws://" + interface_ + ":" + std::to_string(port_);
+      }
 
    protected: 
       void onConnectionCallback(std::weak_ptr<ix::WebSocket> webSocket, ConnectionStatePtr state);
@@ -36,4 +40,4 @@ namespace mikado::broker {
 
 } // namespace mikado::broker
 
-#endif // HANDLER_H
+#endif // BRK_HANDLER_H

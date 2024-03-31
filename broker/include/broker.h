@@ -1,6 +1,7 @@
 #pragma once
 // Copyright (c) 2024 Gamaliel Ltd
 #if !defined(BROKER_H)
+#define BROKER_H
 
 namespace mikado::broker {
 
