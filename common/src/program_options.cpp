@@ -6,6 +6,7 @@ using namespace std;
 namespace mikado::common {
 
    // Strings used in boost::program_options descriptions
+   string const poAppStart{ "app-start" };
    string const poBrokerHost { "broker-host" };
    string const poBrokerPort { "broker-port" };
    string const poBrokerTimeout { "broker-timeout" };

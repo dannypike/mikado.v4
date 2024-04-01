@@ -25,7 +25,7 @@ set(PROJECT_NAME Globber)
 set(TARGET globber)
 
 set(SRC_FILES
-   "src/globber.cpp"
+   src/globber.cpp
 )
 
 add_executable(${TARGET} ${SRC_FILES})

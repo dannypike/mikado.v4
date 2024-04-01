@@ -2,19 +2,18 @@
 #include "windowsApi.h"
 #include "broker.h"
 
-namespace windowsApi = mikado::windowsApi;
 namespace common = mikado::common;
 namespace po = boost::program_options;
-typedef common::MikadoErrorCode MikadoErrorCode;
+namespace windowsApi = mikado::windowsApi;
 using namespace std;
 using namespace std::filesystem;
 
 namespace mikado::broker {
-   static MikadoErrorCode main(int argc, char *argv[]);
+   typedef common::MikadoErrorCode MikadoErrorCode;
 
    //////////////////////////////////////////////////////////////////////////
    //
-   static void outputBanner() {
+   void outputBanner() {
       str_notice() << "Broker version " << BROKER_VERSION_MAJOR << "." << BROKER_VERSION_MINOR
          << " (" << __DATE__ << " " << __TIME__ << ")" << endl;
       str_notice() << "Copyright (c) 2024 Gamaliel Ltd" << endl << endl;
@@ -22,10 +21,23 @@ namespace mikado::broker {
 
    //////////////////////////////////////////////////////////////////////////
    //
-   static MikadoErrorCode main(int argc, char *argv[]) {
+   ostream &operator<<(ostream &os, broker::AppId const &appId) {
+      return os << appId.toString();
+   }
+
+   //////////////////////////////////////////////////////////////////////////
+   //
+   ostream &operator<<(ostream &os, broker::AppInstanceId const &appInstanceId) {
+      return os << appInstanceId.toString();
+   }
+
+   //////////////////////////////////////////////////////////////////////////
+   //
+   MikadoErrorCode main(int argc, char *argv[]) {
 
       auto options = make_shared<common::Configure>(common::appIdBroker, "Mikado Broker", nullptr);
       options->addOptions()
+         (common::poAppStart.c_str(), po::value<vector<string>>(), "Application(s) that the broker should start")
          ;
 
       // There is a typical sequence of processing options, that we do for all of the applications
@@ -35,7 +47,7 @@ namespace mikado::broker {
          return rc;
       }
 
-      // Start the WebSocket handler
+      // Start the WebSocket server
       HandlerPtr handler = make_shared<Handler>();
       if (auto rc = handler->configureHandler(options); MKO_IS_ERROR(rc)) {
          return rc;
@@ -43,6 +55,12 @@ namespace mikado::broker {
       if (auto rc = handler->initializeHandler(); MKO_IS_ERROR(rc)) {
          return rc;
       }
+
+      // The AppManager starts applications
+      auto appManager = make_shared<AppManager>();
+      if (auto rc = appManager->configureAppManager(options); MKO_IS_ERROR(rc)) {
+         return rc;
+      }      
 
       // Set up Ctrl-C/break handler, suppress stdout debug-logging and display the banner
       windowsApi::apiSetupConsole(options, outputBanner);
@@ -55,11 +73,17 @@ namespace mikado::broker {
          common::testConnect(options);
       }
       
-      // Dummy loop until we get the system up and running
+      // "Event" loop
       auto exitCode = MikadoErrorCode::MKO_ERROR_NONE;
       while (!common::MikadoShutdownRequested) {
          if (runTestConnector && common::testProcess()) {
             continue;
+         }
+
+         // Should we start any apps?
+         if (auto rc = appManager->runAppManager(); MKO_IS_ERROR(rc)) {
+            exitCode = rc;
+            break;
          }
 
          this_thread::sleep_for(100ms);
@@ -73,26 +97,5 @@ namespace mikado::broker {
 
       return exitCode;
    }
-    
+
 } // namespace mikado::broker
-
-//////////////////////////////////////////////////////////////////////////
-//
-int main(int argc, char *argv[]) {
-   auto rc = common::commonInitialize(argc, argv, mikado::broker::outputBanner);
-   if (MKO_IS_ERROR(rc)) {
-      return (int)rc;
-   }
-   if (auto rc = windowsApi::apiInitialize(argc, argv); MKO_IS_ERROR(rc)) {
-      return (int)rc;
-   }
-
-   int exitCode = (int)mikado::broker::main(argc, argv);
-   assert(STATUS_PENDING != exitCode);   // Not allowed to return 259 from any process in Windows, as it is reserved for the system.
-    
-   windowsApi::apiShutdown();
-   common::commonShutdown();
-
-   str_info() << "exiting with code " << exitCode << endl;
-   return exitCode;
-}

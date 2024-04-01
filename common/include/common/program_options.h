@@ -6,6 +6,7 @@
 namespace mikado::common {
 
    // Strings used in boost::program_options descriptions
+   extern std::string const poAppStart;
    extern std::string const poBrokerHost;
    extern std::string const poBrokerPort;
    extern std::string const poBrokerTimeout;

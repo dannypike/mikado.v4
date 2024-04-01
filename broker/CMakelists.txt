@@ -18,11 +18,14 @@ set(PROJECT_NAME Broker)
 set(TARGET broker)
 
 set(SRC_FILES
+   src/app.cpp
+   src/appManager.cpp
    src/broker.cpp
+   src/globals.cpp
    src/handler.cpp
 )
 
-add_executable(${TARGET} ${SRC_FILES})
+add_executable(${TARGET} ${SRC_FILES} )
 
 set(EXECUTABLE_OUTPUT_PATH ${CMAKE_CURRENT_SOURCE_DIR}/../bin)
 set_target_properties(${TARGET} PROPERTIES OUTPUT_NAME ${TARGET})
@@ -39,6 +42,7 @@ target_include_directories(${TARGET} PUBLIC
 target_link_libraries(${TARGET} PRIVATE
    ${LIB_FOLDER}/windowsApi.lib
    ${LIB_FOLDER}/common.lib
+   bcrypt.lib
 )
 
 # Import the standard precompiled headers
@@ -69,12 +73,16 @@ target_precompile_headers(${TARGET} PRIVATE
    <boost/iostreams/concepts.hpp>
    <boost/iostreams/stream_buffer.hpp>
    <boost/json.hpp>
-	<boost/lockfree/spsc_queue.hpp>
+   <boost/lexical_cast.hpp>
+   <boost/lockfree/spsc_queue.hpp>
    <boost/program_options.hpp>
    <boost/tuple/tuple.hpp>
+   <boost/uuid/uuid.hpp>
+   <boost/uuid/uuid_generators.hpp>
+   <boost/uuid/uuid_io.hpp>
 )
 
-find_package(Boost REQUIRED COMPONENTS date_time json program_options)
+find_package(Boost REQUIRED COMPONENTS date_time json program_options system)
 target_include_directories(${TARGET} PRIVATE ${Boost_INCLUDE_DIRS})
 target_link_libraries(${TARGET} PRIVATE ${Boost_LIBRARIES})
 
