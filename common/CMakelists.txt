@@ -19,7 +19,6 @@ set(SRC_FILES
    src/configure.cpp
    src/globals.cpp
    src/logger.cpp
-   src/program_options.cpp
    src/smart_enums.cpp
    src/testConnect.cpp
 )

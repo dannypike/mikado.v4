@@ -51,7 +51,7 @@ namespace mikado::windowsApi {
    ///////////////////////////////////////////////////////////////////////
    //
    MikadoErrorCode WindowsProcess::waitForProcess(DWORD *exitCode) {
-      if (!wasStarted_) {
+      if (!isRunning_) {
          return MikadoErrorCode::MKO_ERROR_PROCESS_NOT_STARTED;
       }
 
@@ -142,6 +142,26 @@ namespace mikado::windowsApi {
    ///////////////////////////////////////////////////////////////////////
    //
    MikadoErrorCode WindowsProcess::run() {
+
+      if (isRunning_) {
+         return MikadoErrorCode::MKO_STATUS_ALREADY_DONE;
+      }
+
+      // If it failed before, then try again
+      startFailed_ = false;
+      if (auto rc = doRun(); MKO_IS_ERROR(rc)) {
+         startFailed_ = true;
+         return rc;
+      }
+      else
+      {
+         return rc;
+      }
+   }
+
+   ///////////////////////////////////////////////////////////////////////
+   //
+   MikadoErrorCode WindowsProcess::doRun() {
       pipeStderr_ = make_shared<WindowsPipe>("stderr");
       if (auto rc = pipeStderr_->create(); MKO_IS_ERROR(rc)) {
          return rc;
@@ -199,7 +219,7 @@ namespace mikado::windowsApi {
             << " failed with error: " << getLastErrorAsString() << endl;
          return MikadoErrorCode::MKO_ERROR_PROCESS_NOT_STARTED;
       }
-      wasStarted_ = true;
+      isRunning_ = true;
       str_info() << "CreateProcess(" << appPath << ") in folder " << currentFolder << " succeeded, pid="
          << procInfo_.dwProcessId << endl;
 
@@ -210,13 +230,14 @@ namespace mikado::windowsApi {
       thread_ = make_shared<WindowsHandle>(debugName);
       thread_->attach(&procInfo_.hThread);
 
-      MikadoErrorCode result = MikadoErrorCode::MKO_ERROR_PROCESS_FAILED;
-      if (auto rc = waitForProcess(&exitCode_); MKO_IS_ERROR(rc)) {
-         str_error() << "waitForProcess(" << (HANDLE)*proc_ << ") failed with error: " << rc << endl;
-         return rc;
+      if (waitForProcess_) {
+         if (auto rc = waitForProcess(&exitCode_); MKO_IS_ERROR(rc)) {
+            str_error() << "waitForProcess(" << (HANDLE)*proc_ << ") failed with error: " << rc << endl;
+            return rc;
+         }
+         str_info() << "Process " << procInfo_.dwProcessId << " exited with code " << exitCode_ << endl;
+         closeProcessHandles();
       }
-      str_info() << "Process " << procInfo_.dwProcessId << " exited with code " << exitCode_ << endl;
-      closeProcessHandles();
       return MikadoErrorCode::MKO_ERROR_NONE;
    }
 

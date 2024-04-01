@@ -13,8 +13,9 @@ namespace mikado::broker {
    public:
       MikadoErrorCode configureAppManager(common::ConfigurePtr cfg);
       AppPtr addAppInstance(AppId const &appId);
+      MikadoErrorCode dropAppInstance(AppPtr app);
       MikadoErrorCode dropAppInstance(AppId const &appId, AppInstanceId const &instanceId);
-      MikadoErrorCode runAppManager();
+      MikadoErrorCode runAppManager(common::ConfigurePtr options);
       void shutdownAppManager();
 
    protected:

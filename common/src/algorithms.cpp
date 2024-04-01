@@ -244,6 +244,47 @@ namespace mikado::common {
 
    ///////////////////////////////////////////////////////////////////////
    //
+   MikadoErrorCode jsonVectorString(vector<string> &result, json::value jv
+      , char const *propertyName)
+   {
+      // If the json value is an object, we look for a property member that is an array
+      if (propertyName && jv.is_object()) {
+         auto jo = jv.as_object();
+         if (!jo.contains(propertyName)) {
+            str_error() << "json value does not have property '" << propertyName << "'" << endl;
+            return MikadoErrorCode::MKO_ERROR_INVALID_CONFIG;
+         }
+         jv = jo.at(propertyName);
+      }
+
+      // If the json value is not now an array, then bomb out
+      if (!jv.is_array()) {
+         str_error() << "json value ";
+         if (propertyName) {
+            str_error() << " at property '" << propertyName << "' ";
+         }
+         str_error() << "is not an array" << endl;
+         return MikadoErrorCode::MKO_ERROR_INVALID_CONFIG;
+      }
+      
+      // extract the strings from the array
+      auto ja = jv.as_array();
+      auto index = 0;
+      for (auto jString : ja) {
+         if (!jString.is_string()) {
+            str_error() << "json array property '" << propertyName
+               << "' contains a non-string value (kind=" << jString.kind()
+               << ", value='" << jString << "'), at index #" << index << endl;
+            return MikadoErrorCode::MKO_ERROR_INVALID_CONFIG;
+         }
+         ++index;
+         result.emplace_back(jString.as_string());
+      }
+      return MikadoErrorCode::MKO_ERROR_NONE;
+   }
+
+   ///////////////////////////////////////////////////////////////////////
+   //
    string poGetString(po::variables_map const &cfg, string const &propertyName
       , char const *defaultValue, source_location const &loc) {
 

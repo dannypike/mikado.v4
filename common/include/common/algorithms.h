@@ -3,6 +3,8 @@
 #if !defined(CMN_ALGORITHMS_H)
 #define CMN_ALGORITHMS_H
 
+#include "common/errorCodes.h"
+
 namespace mikado::common {
    extern std::string EmptyString;
 
@@ -31,7 +33,9 @@ namespace mikado::common {
    boost::json::value jsonProperty(boost::json::value const &value, size_t index);
    std::string jsonPropertyString(boost::json::value const &value, std::string const &propertyName
       , char const *defaultValue = nullptr);
-
+   MikadoErrorCode jsonVectorString(std::vector<std::string> &result, boost::json::value jv
+      , char const *propertyName = nullptr);
+   
    std::string poGetString(boost::program_options::variables_map const &cfg, std::string const &propertyName
       , char const *defaultValue = nullptr, std::source_location const &loc = std::source_location::current());
    std::vector<std::string> poGetVectorString(boost::program_options::variables_map const &cfg

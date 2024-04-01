@@ -81,7 +81,7 @@ namespace mikado::broker {
          }
 
          // Should we start any apps?
-         if (auto rc = appManager->runAppManager(); MKO_IS_ERROR(rc)) {
+         if (auto rc = appManager->runAppManager(options); MKO_IS_ERROR(rc)) {
             exitCode = rc;
             break;
          }

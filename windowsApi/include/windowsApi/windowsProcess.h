@@ -27,7 +27,15 @@ namespace mikado::windowsApi {
       void setShutdownTimeout(unsigned timeout) { shutdownTimeout_ = timeout; }
       unsigned getShutdownTimeout() const { return shutdownTimeout_; }
 
+      bool isRunning() const {
+         return isRunning_;
+      }
+      bool startFailed() const {
+         return startFailed_;
+      }
+
    protected:
+      MikadoErrorCode doRun();
       MikadoErrorCode closeProcessHandles();
 
    private:
@@ -35,7 +43,9 @@ namespace mikado::windowsApi {
 
       bool shutdownRequested_ = false;
       unsigned shutdownTimeout_ = 5000;
-      bool wasStarted_ = false;
+      bool isRunning_ = false;
+      bool startFailed_ = false;
+      bool waitForProcess_ = false;
       DWORD exitCode_ = (DWORD)-1;
 
       std::string appName_;

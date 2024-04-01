@@ -24,10 +24,23 @@ namespace mikado::broker {
       common::WebSocketPtr getWebSocket() const {
          return ws_;
       }
+      AppId appId() const {
+         return appId_;
+      }
+      AppInstanceId instanceId() const {
+         return instanceId_;
+      }
+      void setProcess(windowsApi::WindowsProcessPtr process) {
+         process_ = process;
+      }
+      windowsApi::WindowsProcessPtr getProcess() const {
+         return process_;
+      }
 
    private:
       AppId appId_;
       AppInstanceId instanceId_;
+      windowsApi::WindowsProcessPtr process_;
       common::WebSocketPtr ws_;
    };
    typedef std::shared_ptr<App> AppPtr;

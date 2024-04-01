@@ -16,8 +16,26 @@ namespace mikado::common {
    string appIdGlobber{ "globber" };
    string appIdStorage{ "storage" };
 
-   // Actions are used to identify the type of message in websocket messages
-   string actionConnect{ "connect" };
+   // Strings used in boost::program_options descriptions
+   string const poAppStart{ "app-start" };
+   string const poBrokerHost{ "broker-host" };
+   string const poBrokerPort{ "broker-port" };
+   string const poBrokerTimeout{ "broker-timeout" };
+   string const poConsoleRestoreOnExit{ "console-restore-on-exit" };
+   string const poConsoleQuiet{ "console-quiet" };
+   string const poConsoleTitle{ "console-title" };
+   string const poDefault{ "default" };
+   string const poExclude{ "exclude" };
+   string const poHelp{ "help" };
+   string const poInclude{ "include" };
+   string const poRoot{ "root" };
+
+   // Strings used in the configuration files
+   string const cfgAppId{ "appId" };
+   string const cfgArgs{ "args" };
+   string const cfgStartFolder{ "startFolder" };
+   string const cfgExePath{ "exePath" };
+   string const cfgPath{ "path" };
 
    // fields are used in websocket messages
    extern std::string fieldAction{ "action" };
@@ -25,6 +43,9 @@ namespace mikado::common {
    extern std::string fieldTimestamp{ "timestamp" };
    extern std::string fieldType{ "field" };
    extern std::string fieldVersion{ "version" };
+
+   // Actions are used to identify the type of message in websocket messages
+   string actionConnect{ "connect" };
 
    MikadoErrorCode commonInitialize(int argc, char *argv[], function<void()> outputBanner) {
       if (!ix::initNetSystem()) {
