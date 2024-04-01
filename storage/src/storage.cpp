@@ -104,12 +104,12 @@ int main(int argc, char *argv[]) {
         return (int)rc;
     }
 
-    int exitCode = (int)mikado::storage::main(argc, argv);
-    assert(STATUS_PENDING != exitCode);   // Not allowed to return 259 from any process in Windows, as it is reserved for the system.
+    auto exitCode = (int)mikado::storage::main(argc, argv);
+    assert(STATUS_PENDING != (int)exitCode);   // Not allowed to return 259 from any process in Windows, as it is reserved for the system.
     
     windowsApi::apiShutdown();
     common::commonShutdown();
 
     str_info() << "exiting with code " << exitCode << endl;
-    return exitCode;
+    return (int)exitCode;
 }
