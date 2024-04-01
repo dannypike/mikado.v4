@@ -7,7 +7,7 @@ if (${DUMP_VARIABLES}) # Set to FALSE to disable the following code
     message("")
     dumpVariables()
     message("")
-    message("End of the list of variables for ${MKO_NAME}")
+    message("End of the list of variables for ${PROJECT_NAME}")
     message("####################################################")
  endif()
  

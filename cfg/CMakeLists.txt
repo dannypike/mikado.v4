@@ -5,9 +5,8 @@
 # 3.16 is required for target_precompile_headers(...PRECOMPILE_HEADERS_REUSE_FROM...)
 # 3.25 is required for CMAKE_C_COMPILE_OPTIONS_MSVC_DEBUG_INFORMATION_FORMAT
 cmake_minimum_required (VERSION 3.25)
-set(CMAKE_FOLDER ${CMAKE_CURRENT_SOURCE_DIR}/../cmake)
-set(CFG_FOLDER ${CMAKE_CURRENT_SOURCE_DIR}/../bin/cfg)
 
+set(CMAKE_FOLDER ${CMAKE_CURRENT_SOURCE_DIR}/../cmake)
 include(${CMAKE_FOLDER}/header.cmake)
 set(DUMP_VARIABLES FALSE)
 

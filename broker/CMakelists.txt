@@ -6,11 +6,8 @@
 # 3.16 is required for target_precompile_headers(...PRECOMPILE_HEADERS_REUSE_FROM...)
 # 3.25 is required for CMAKE_C_COMPILE_OPTIONS_MSVC_DEBUG_INFORMATION_FORMAT
 cmake_minimum_required (VERSION 3.25)
-set(CMAKE_FOLDER ${CMAKE_CURRENT_SOURCE_DIR}/../cmake)
-set(COMMON_FOLDER ${CMAKE_CURRENT_SOURCE_DIR}/../common)
-set(API_FOLDER ${CMAKE_CURRENT_SOURCE_DIR}/../windowsApi)
-set(LIB_FOLDER ${CMAKE_CURRENT_SOURCE_DIR}/../lib)
 
+set(CMAKE_FOLDER ${CMAKE_CURRENT_SOURCE_DIR}/../cmake)
 include(${CMAKE_FOLDER}/header.cmake)
 set(DUMP_VARIABLES FALSE)
 
@@ -25,69 +22,10 @@ set(SRC_FILES
    src/handler.cpp
 )
 
-add_executable(${TARGET} ${SRC_FILES} )
+# Settings and switches for all Mikado executables
+include(${CMAKE_FOLDER}/common-exe.cmake)
 
-set(EXECUTABLE_OUTPUT_PATH ${CMAKE_CURRENT_SOURCE_DIR}/../bin)
-set_target_properties(${TARGET} PROPERTIES OUTPUT_NAME ${TARGET})
-set_property(TARGET ${TARGET} PROPERTY CXX_STANDARD 20)	# std::jthread requires C++20
-
-# Include ixWebSocket stuff
-include(${CMAKE_FOLDER}/ixwebsocket.cmake)
-
-target_include_directories(${TARGET} PUBLIC
-   ${COMMON_FOLDER}/include
-   ${API_FOLDER}/include
-   ${CMAKE_CURRENT_SOURCE_DIR}/include
-)
-target_link_libraries(${TARGET} PRIVATE
-   ${LIB_FOLDER}/windowsApi.lib
-   ${LIB_FOLDER}/common.lib
-   bcrypt.lib
-)
-
-# Import the standard precompiled headers
-target_precompile_headers(${TARGET} PRIVATE
-   # Standard Library
-   <cassert>
-   <filesystem>
-   <source_location>
-   <string>
-	<thread>
-
-   # Windows API
-   <winsock2.h>
-	"../include/windows-hack.h"	# undef's min and max
-	<wincrypt.h>
-
-	# OpenSSL
-	<openssl/bio.h>
-	<openssl/pem.h>
-	<openssl/x509.h>
-
-	# IXWebsocket
-   ${IXWEBSOCKET_INCLUDE_FILES}
-
-   # Boost
-   <boost/algorithm/string/predicate.hpp>
-   <boost/date_time/posix_time/posix_time.hpp>
-   <boost/iostreams/concepts.hpp>
-   <boost/iostreams/stream_buffer.hpp>
-   <boost/json.hpp>
-   <boost/lexical_cast.hpp>
-   <boost/lockfree/spsc_queue.hpp>
-   <boost/program_options.hpp>
-   <boost/tuple/tuple.hpp>
-   <boost/uuid/uuid.hpp>
-   <boost/uuid/uuid_generators.hpp>
-   <boost/uuid/uuid_io.hpp>
-)
-
-find_package(Boost REQUIRED COMPONENTS date_time json program_options system)
-target_include_directories(${TARGET} PRIVATE ${Boost_INCLUDE_DIRS})
-target_link_libraries(${TARGET} PRIVATE ${Boost_LIBRARIES})
-
-find_package(OpenSSL REQUIRED)
-target_link_libraries(${TARGET} PRIVATE ${OPENSSL_LIBRARIES})
-target_link_libraries(${TARGET} PRIVATE Crypt32 d3d9.lib)
+# Settings and switches for all Mikado projects
+include(${CMAKE_FOLDER}/common-all.cmake)
 
 include(${CMAKE_FOLDER}/footer.cmake)

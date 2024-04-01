@@ -2,8 +2,13 @@ message("####################################################")
 message("Processing CMakeLists.txt for ${PROJECT_NAME}")
 message("")
 
-set(CMAKE_VERBOSE_MAKEFILE ON)
-set(DUMP_VARIABLES FALSE)
+set(CMAKE_VERBOSE_MAKEFILE OFF)
+set(USE_GITHUB_IXWEBSOCKET TRUE)
+
+set(COMMON_FOLDER ${CMAKE_CURRENT_SOURCE_DIR}/../common)
+set(API_FOLDER ${CMAKE_CURRENT_SOURCE_DIR}/../windowsApi)
+set(LIB_FOLDER ${CMAKE_CURRENT_SOURCE_DIR}/../lib)
+set(CFG_FOLDER ${CMAKE_CURRENT_SOURCE_DIR}/../bin/cfg)
 
 # Enable Hot Reload for MSVC compilers if supported.
 # This MUST be set before the project() statement or it will not be possible to
