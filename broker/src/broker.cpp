@@ -69,19 +69,9 @@ namespace mikado::broker {
 
       str_notice() << "Broker is listening for connections on " << handler->getUrl() << endl;
 
-      // Test the startup protocol (normally disabled)
-      bool runTestConnector = false;
-      if (runTestConnector) {
-         common::testConnect(options);
-      }
-      
       // "Event" loop
       auto exitCode = MikadoErrorCode::MKO_ERROR_NONE;
       while (!common::MikadoShutdownRequested) {
-         if (runTestConnector && common::testProcess()) {
-            continue;
-         }
-
          // Should we start any apps?
          if (auto rc = appManager->runAppManager(options); MKO_IS_ERROR(rc)) {
             exitCode = rc;
@@ -92,9 +82,6 @@ namespace mikado::broker {
       }
 
       str_notice() << "Broker is shutting down" << endl;
-      if (runTestConnector) {
-         common::testShutdown();
-      }
       handler->shutdown();
 
       return exitCode;

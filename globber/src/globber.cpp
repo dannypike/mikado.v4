@@ -132,11 +132,10 @@ namespace mikado::globber {
          *exitCode = monitor->run(rootFolder);
          }, monitor, rootFolder, &exitCode);
 
-      // Test the startup protocol
-      bool runTestConnector = true;
-      bool sendTestMessage = true;
-      if (runTestConnector) {
-         common::testConnect(options);
+      // Connect to the broker
+      auto broker = make_shared<common::BrokerConnection>();
+      if (auto rc = broker->connect(options); MKO_IS_ERROR(rc)) {
+         return rc;
       }
 
       // Wait for the monitor to detect changes to files and write them to cout
@@ -146,18 +145,14 @@ namespace mikado::globber {
                cout << queueData->json << endl;
                })) {
             this_thread::sleep_for(10ms);
-         }
 
-         if (runTestConnector && sendTestMessage && common::testProcess()) {
-            continue;
+            // Push any outgoing messages to the broker
+            broker->processOutgoing();
          }
       }
 
       str_info() << "shutting down" << endl;
-      if (runTestConnector) {
-         common::testShutdown();
-      }
-
+      broker->shutdown();
       for (auto mm : FileMonitors) {
          mm->stopMonitoring();
       }

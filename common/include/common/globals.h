@@ -43,6 +43,7 @@ namespace mikado::common {
    // fields are used in websocket messages
    extern std::string fieldAction;
    extern std::string fieldAppId;
+   extern std::string fieldInstanceId;
    extern std::string fieldTimestamp;
    extern std::string fieldType;
    extern std::string fieldVersion;

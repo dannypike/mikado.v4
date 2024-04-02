@@ -16,11 +16,11 @@ include(${CMAKE_FOLDER}/header.cmake)
 set(SRC_FILES
    src/algorithms.cpp
    src/ascii.cpp
+   src/brokerConnection.cpp
    src/configure.cpp
    src/globals.cpp
    src/logger.cpp
    src/smart_enums.cpp
-   src/testConnect.cpp
 )
 
 # Settings and switches for all Mikado projects

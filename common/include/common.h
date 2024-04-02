@@ -12,6 +12,6 @@ namespace mikado::common {}
 #include "common/globals.h"
 #include "common/logger.h"
 #include "common/configure.h"
-#include "common/testConnect.h"
+#include "common/brokerConnection.h"
 
 #endif // MKO_COMMON_H     

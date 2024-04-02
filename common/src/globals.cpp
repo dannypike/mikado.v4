@@ -38,11 +38,12 @@ namespace mikado::common {
    string const kStartRetry{ "start-retry" };
 
    // fields are used in websocket messages
-   extern std::string fieldAction{ "action" };
-   extern std::string fieldAppId{ "appid" };
-   extern std::string fieldTimestamp{ "timestamp" };
-   extern std::string fieldType{ "field" };
-   extern std::string fieldVersion{ "version" };
+   string fieldAction{ "action" };
+   string fieldAppId{ "appid" };
+   string fieldInstanceId{ "instanceid" };
+   string fieldTimestamp{ "timestamp" };
+   string fieldType{ "field" };
+   string fieldVersion{ "version" };
 
    // Actions are used to identify the type of message in websocket messages
    string actionConnect{ "connect" };
