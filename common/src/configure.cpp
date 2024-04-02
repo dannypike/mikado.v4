@@ -18,6 +18,7 @@ namespace mikado::common {
 
       // Add the options that are defined for all Mikado apps
       addOptions()
+         (common::kAppId.c_str(), po::value<string>(), "the type of the application (broker, globber, storage etc)")
          (common::kBrokerHost.c_str(), po::value<string>()->default_value("127.0.0.1"), "broker host")
          (common::kBrokerPort.c_str(), po::value<int>()->default_value(22304), "broker port")
          (common::kBrokerTimeout.c_str(), po::value<unsigned>()->default_value(2), "broker timeout in seconds")
@@ -25,6 +26,7 @@ namespace mikado::common {
          (common::kConsoleRestoreOnExit.c_str(), po::value<bool>()->default_value(false), "save and restore the title on exit")
          (common::kConsoleTitle.c_str(), po::value<string>()->default_value(consoleTitle), "set the console title")
          (common::kHelp.c_str(), "produce help message")
+         (common::kInstanceId.c_str(), po::value<string>(), "a uuid identifying the specific instance of the application (there may be multiple copies running)")
          ;
 
       // If we are not the broker, then create a Websocket object to connect to it
