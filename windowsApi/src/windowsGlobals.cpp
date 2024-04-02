@@ -60,9 +60,9 @@ namespace mikado::windowsApi {
    //
    MikadoErrorCode apiSetupConsole(common::ConfigurePtr options, function<void()> showBanner) {
 
-      auto quiet = options->get<bool>(common::poConsoleQuiet);
-      auto restoreTitle = options->get<bool>(common::poConsoleRestoreOnExit);
-      auto consoleTitle = options->get<string>(common::poConsoleTitle);
+      auto quiet = options->get<bool>(common::kConsoleQuiet);
+      auto restoreTitle = options->get<bool>(common::kConsoleRestoreOnExit);
+      auto consoleTitle = options->get<string>(common::kConsoleTitle);
 
       // Don't output anything to the console. We do this now just in case there were
       // any errors in the configuration.

@@ -32,8 +32,8 @@ namespace mikado::common {
 
    void testConnect(common::ConfigurePtr options) {
 
-      auto port = options->get<int>(common::poBrokerPort);
-      auto host = options->get<string>(common::poBrokerHost);
+      auto port = options->get<int>(common::kBrokerPort);
+      auto host = options->get<string>(common::kBrokerHost);
       stringstream url;
       url << "ws://" << host << ":" << port << "/";
       url.flush();

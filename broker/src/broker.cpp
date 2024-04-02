@@ -37,7 +37,7 @@ namespace mikado::broker {
 
       auto options = make_shared<common::Configure>(common::appIdBroker, "Mikado Broker", nullptr);
       options->addOptions()
-         (common::poAppStart.c_str(), po::value<vector<string>>(), "Application(s) that the broker should start")
+         (common::kStartApp.c_str(), po::value<vector<string>>(), "Application(s) that the broker should start")
          ;
 
       // There is a typical sequence of processing options, that we do for all of the applications

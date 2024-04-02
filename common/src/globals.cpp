@@ -16,26 +16,25 @@ namespace mikado::common {
    string appIdGlobber{ "globber" };
    string appIdStorage{ "storage" };
 
-   // Strings used in boost::program_options descriptions
-   string const poAppStart{ "app-start" };
-   string const poBrokerHost{ "broker-host" };
-   string const poBrokerPort{ "broker-port" };
-   string const poBrokerTimeout{ "broker-timeout" };
-   string const poConsoleRestoreOnExit{ "console-restore-on-exit" };
-   string const poConsoleQuiet{ "console-quiet" };
-   string const poConsoleTitle{ "console-title" };
-   string const poDefault{ "default" };
-   string const poExclude{ "exclude" };
-   string const poHelp{ "help" };
-   string const poInclude{ "include" };
-   string const poRoot{ "root" };
-
-   // Strings used in the configuration files
-   string const cfgAppId{ "appId" };
-   string const cfgArgs{ "args" };
-   string const cfgStartFolder{ "startFolder" };
-   string const cfgExePath{ "exePath" };
-   string const cfgPath{ "path" };
+   // String constants
+   string const kAppId{ "appId" };
+   string const kArgs{ "args" };
+   string const kBrokerHost{ "broker-host" };
+   string const kBrokerPort{ "broker-port" };
+   string const kBrokerTimeout{ "broker-timeout" };
+   string const kConsoleQuiet{ "console-quiet" };
+   string const kConsoleRestoreOnExit{ "console-restore-on-exit" };
+   string const kConsoleTitle{ "console-title" };
+   string const kDefault{ "default" };
+   string const kExclude{ "exclude" };
+   string const kExePath{ "exePath" };
+   string const kHelp{ "help" };
+   string const kInclude{ "include" };
+   string const kInstanceId{ "instanceId" };
+   string const kRoot{ "root" };
+   string const kStartApp{ "start-app" };
+   string const kStartFolder{ "startFolder" };
+   string const kStartRetry{ "start-retry" };
 
    // fields are used in websocket messages
    extern std::string fieldAction{ "action" };

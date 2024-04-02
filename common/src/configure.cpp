@@ -18,13 +18,13 @@ namespace mikado::common {
 
       // Add the options that are defined for all Mikado apps
       addOptions()
-         (common::poBrokerHost.c_str(), po::value<string>()->default_value("127.0.0.1"), "broker host")
-         (common::poBrokerPort.c_str(), po::value<int>()->default_value(22304), "broker port")
-         (common::poBrokerTimeout.c_str(), po::value<unsigned>()->default_value(2), "broker timeout in seconds")
-         (common::poConsoleQuiet.c_str(), po::value<bool>()->default_value(true), "suppress output to console")
-         (common::poConsoleRestoreOnExit.c_str(), po::value<bool>()->default_value(false), "save and restore the title on exit")
-         (common::poConsoleTitle.c_str(), po::value<string>()->default_value(consoleTitle), "set the console title")
-         (common::poHelp.c_str(), "produce help message")
+         (common::kBrokerHost.c_str(), po::value<string>()->default_value("127.0.0.1"), "broker host")
+         (common::kBrokerPort.c_str(), po::value<int>()->default_value(22304), "broker port")
+         (common::kBrokerTimeout.c_str(), po::value<unsigned>()->default_value(2), "broker timeout in seconds")
+         (common::kConsoleQuiet.c_str(), po::value<bool>()->default_value(true), "suppress output to console")
+         (common::kConsoleRestoreOnExit.c_str(), po::value<bool>()->default_value(false), "save and restore the title on exit")
+         (common::kConsoleTitle.c_str(), po::value<string>()->default_value(consoleTitle), "set the console title")
+         (common::kHelp.c_str(), "produce help message")
          ;
 
       // If we are not the broker, then create a Websocket object to connect to it
@@ -191,7 +191,7 @@ namespace mikado::common {
          notify();
       
          // If anything asks for help, that's the only thing we do
-         if (has(common::poHelp)) {
+         if (has(common::kHelp)) {
             return showHelp(exeName.string(), showBanner);
          }
 

@@ -18,7 +18,7 @@ namespace mikado::broker {
    //
    MikadoErrorCode AppManager::configureAppManager(common::ConfigurePtr cfg) {
       auto appIndex = 0;
-      for (auto const &app : cfg->get<vector<string>>(common::poAppStart)) {
+      for (auto const &app : cfg->get<vector<string>>(common::kStartApp)) {
          try
          {
             ++appIndex;
@@ -29,11 +29,11 @@ namespace mikado::broker {
                str_error() << "Error parsing app definition #" << appIndex << ": " << ec.message() << endl;
                return MikadoErrorCode::MKO_ERROR_APP_CONFIGURE;
             }
-            string appId{ jv.at(common::cfgAppId).as_string().c_str() };
-            str_info() << "Starting app '" << appId << "'" << endl;
+            string appId{ jv.at(common::kAppId).as_string().c_str() };
+            str_info() << "Configuring app '" << appId << "'" << endl;
 
             // The exe pathname is either absolute or it is relative to the Broker exe
-            path exePath{ move(common::lexicalPath(common::jsonPropertyString(jv, common::cfgExePath).c_str())) };
+            path exePath{ move(common::lexicalPath(common::jsonPropertyString(jv, common::kExePath).c_str())) };
             if (!exists(exePath)) {
                str_error() << "App '" << appId << "' exe not found: " << exePath << endl;
                return MikadoErrorCode::MKO_ERROR_APP_CONFIGURE;
@@ -41,7 +41,7 @@ namespace mikado::broker {
 
             // The "current folder" for the app is relative ot the app's folder, not the Broker's current folder
             // and not relative to the Broker exe (unless that's the same as the app's exe folder).
-            path startFolder{ move(common::lexicalPath(common::jsonPropertyString(jv, common::cfgStartFolder).c_str())) };
+            path startFolder{ move(common::lexicalPath(common::jsonPropertyString(jv, common::kStartFolder).c_str())) };
             if (!exists(startFolder)) {
                if (!create_directories(startFolder)) {
                   str_error() << "App '" << appId << "' start folder not found: "
@@ -52,7 +52,7 @@ namespace mikado::broker {
 
             // Extract the arguments for the app
             vector<string> args;
-            if (auto rc = common::jsonVectorString(args, jv, common::cfgArgs.c_str()); MKO_IS_ERROR(rc)) {
+            if (auto rc = common::jsonVectorString(args, jv, common::kArgs.c_str()); MKO_IS_ERROR(rc)) {
                str_error() << "Error parsing app '" << appId << "' arguments: " << rc << endl;
                return rc;
             }

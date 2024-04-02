@@ -14,8 +14,8 @@ namespace mikado::broker {
    ///////////////////////////////////////////////////////////////////////////
    //
    MikadoErrorCode Handler::configureHandler(common::ConfigurePtr cfg) {
-      port_ = cfg->get<int>(common::poBrokerPort);
-      interface_ = cfg->get<string>(common::poBrokerHost, interface_);
+      port_ = cfg->get<int>(common::kBrokerPort);
+      interface_ = cfg->get<string>(common::kBrokerHost, interface_);
       return MikadoErrorCode::MKO_ERROR_NONE;
    }
 
