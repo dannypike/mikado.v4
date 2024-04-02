@@ -16,12 +16,14 @@ namespace mikado::broker {
       MikadoErrorCode dropAppInstance(AppPtr app);
       MikadoErrorCode dropAppInstance(AppId const &appId, AppInstanceId const &instanceId);
       MikadoErrorCode runAppManager(common::ConfigurePtr options);
-      void shutdownAppManager();
 
    protected:
       typedef std::unordered_map<AppInstanceId, AppPtr, AppInstanceIdHasher> InstanceStore;
       typedef std::shared_ptr<InstanceStore> InstanceStorePtr;
       typedef std::unordered_map<AppId, InstanceStorePtr, AppIdHasher> AppStore;
+
+      MikadoErrorCode configureComspec(boost::json::value const &jv, std::string const &appId
+         , std::vector<std::string> &args, std::filesystem::path &exePath);
 
    private:
       AppStore appStore_;

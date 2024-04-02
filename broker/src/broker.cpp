@@ -38,6 +38,8 @@ namespace mikado::broker {
       auto options = make_shared<common::Configure>(common::appIdBroker, "Mikado Broker", nullptr);
       options->addOptions()
          (common::kStartApp.c_str(), po::value<vector<string>>(), "Application(s) that the broker should start")
+         (common::kStartComspec.c_str(), po::value<vector<string>>(), "Arguments for Command Prompt, if not running as a standalone app")
+         (common::kStartRetry.c_str(), po::value<int>(), "Delay time (ms) between successive attempts to restart the app")
          ;
 
       // There is a typical sequence of processing options, that we do for all of the applications

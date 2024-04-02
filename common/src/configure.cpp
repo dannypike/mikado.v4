@@ -52,6 +52,7 @@ namespace mikado::common {
          return MikadoErrorCode::MKO_ERROR_PATH_NOT_FOUND;
       }
 
+      str_debug() << "reading configuration file " << cfgFilename << endl;
       auto parsedFile = po::parse_config_file<char>(cfgFilename.string().c_str(), *options_);
       po::store(parsedFile, *values_, true);
       return MikadoErrorCode::MKO_ERROR_NONE;
@@ -170,7 +171,9 @@ namespace mikado::common {
       try
       {
          // If the configuration file exists, we read it first
-         path exePath(argv[0]);
+         //path exePath(argv[0]);
+         boost::dll::fs::error_code ec;
+         path exePath(boost::dll::program_location(ec).string());
          path exeName{ exePath.filename() };
          path cfgFilename{ exePath.parent_path() / "cfg" / exeName };
          cfgFilename.replace_extension(".cfg");

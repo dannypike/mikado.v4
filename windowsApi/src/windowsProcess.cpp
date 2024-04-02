@@ -21,7 +21,9 @@ namespace mikado::windowsApi {
    WindowsProcess::WindowsProcess(string const &appName) : appName_ { appName }
    {
       ZeroMemory(&procInfo_, sizeof(procInfo_));
+
       ZeroMemory(&startInfo_, sizeof(startInfo_));
+      startInfo_.cb = sizeof(startInfo_);
    }
 
    ///////////////////////////////////////////////////////////////////////
@@ -150,6 +152,11 @@ namespace mikado::windowsApi {
       // If it failed before, then try again
       startFailed_ = false;
       if (auto rc = doRun(); MKO_IS_ERROR(rc)) {
+         str_error() << "failed to start " << exeFilename_ << ": " << rc
+            << ", with arguments:" << endl;
+         for (auto aa : args_) {
+            str_error() << "  arg: " << aa << endl;
+         }
          startFailed_ = true;
          return rc;
       }
@@ -161,29 +168,46 @@ namespace mikado::windowsApi {
 
    ///////////////////////////////////////////////////////////////////////
    //
-   MikadoErrorCode WindowsProcess::doRun() {
-      pipeStderr_ = make_shared<WindowsPipe>("stderr");
-      if (auto rc = pipeStderr_->create(); MKO_IS_ERROR(rc)) {
-         return rc;
-      }
-      pipeStdout_ = make_shared<WindowsPipe>("stdout");
-      if (auto rc = pipeStdout_->create(); MKO_IS_ERROR(rc)) {
-         return rc;
-      }
-      pipeStdin_ = make_shared<WindowsPipe>("stdin");
-      if (auto rc = pipeStdin_->create(); MKO_IS_ERROR(rc)) {
-         return rc;
+   MikadoErrorCode WindowsProcess::interceptStdHandles() {
+      if (!pipeStdin_) {
+         pipeStdin_ = make_shared<WindowsPipe>("stdin");
+         if (auto rc = pipeStdin_->create(); MKO_IS_ERROR(rc)) {
+            return rc;
+         }
       }
 
-      startInfo_.cb = sizeof(startInfo_);
-      startInfo_.hStdError = *pipeStderr_->GetReadHandle();
-      startInfo_.hStdOutput = *pipeStdout_->GetReadHandle();
+      if (!pipeStdout_) {
+         pipeStdout_ = make_shared<WindowsPipe>("stdout");
+         if (auto rc = pipeStdout_->create(); MKO_IS_ERROR(rc)) {
+            return rc;
+         }
+      }
+
+      if (!pipeStderr_) {
+         pipeStderr_ = make_shared<WindowsPipe>("stderr");
+         if (auto rc = pipeStderr_->create(); MKO_IS_ERROR(rc)) {
+            return rc;
+         }
+      }
       startInfo_.hStdInput = *pipeStdout_->GetWriteHandle();
+      startInfo_.hStdOutput = *pipeStdout_->GetReadHandle();
+      startInfo_.hStdError = *pipeStderr_->GetReadHandle();
       startInfo_.dwFlags |= STARTF_USESTDHANDLES;
+      return MikadoErrorCode::MKO_ERROR_NONE;
+   }
 
-      string currentFolder = startFolder_.string();
+   ///////////////////////////////////////////////////////////////////////
+   //
+   MikadoErrorCode WindowsProcess::doRun() {
 
-      // Build the command-line from the args vector
+      ZeroMemory(&startInfo_, sizeof(startInfo_));
+      startInfo_.cb = sizeof(startInfo_);
+
+      if (interceptStd_) {
+         interceptStdHandles();
+      }
+
+      // Build the command-line from the args vector (excluding the exe filename)
       stringstream ss;
       for (auto aa : args_) {
          auto quoted = (aa.empty() || (string::npos != aa.find(' ')));
@@ -202,26 +226,29 @@ namespace mikado::windowsApi {
          str_error() << "executable not found: " << appPath << endl;
          return MikadoErrorCode::MKO_ERROR_PATH_NOT_FOUND;
       }
+      
+      string currentFolder = startFolder_.string();
       BOOL started = CreateProcess(
          appPath.string().c_str(),  // full path to the executable 
          (LPSTR)cmdLine_.c_str(),   // command line excluding the EXE name
          NULL, // process security attributes 
          NULL, // primary thread security attributes 
          TRUE, // handles are inherited 
-         0,    // creation flags 
+         CREATE_NEW_CONSOLE,    // creation flags 
          NULL, // use parent's environment 
          currentFolder.c_str(),  // starting current directory
          &startInfo_,            // STARTUPINFO pointer 
          &procInfo_              // receives PROCESS_INFORMATION 
          );
       if (!started) {
-         str_error() << "CreateProcess(" << appPath << ") in folder " << currentFolder
+         str_error() << "CreateProcess(" << appPath << ") in folder " << startFolder_
             << " failed with error: " << getLastErrorAsString() << endl;
          return MikadoErrorCode::MKO_ERROR_PROCESS_NOT_STARTED;
       }
       isRunning_ = true;
-      str_info() << "CreateProcess(" << appPath << ") in folder " << currentFolder << " succeeded, pid="
-         << procInfo_.dwProcessId << endl;
+      str_info() << "CreateProcess(" << appPath << ") in folder " << startFolder_
+         << " succeeded, pid=" << procInfo_.dwProcessId << ", cmdline: '" << endl
+         << cmdLine_ << "'" << endl;
 
       // Take ownership of the process handle
       auto debugName = string("process-") + exeFilename_.filename().string();

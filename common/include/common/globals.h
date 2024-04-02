@@ -36,6 +36,7 @@ namespace mikado::common {
    extern std::string const kInstanceId;
    extern std::string const kRoot;
    extern std::string const kStartApp;
+   extern std::string const kStartComspec;
    extern std::string const kStartFolder;
    extern std::string const kStartRetry;
 

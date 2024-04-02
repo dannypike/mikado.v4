@@ -33,8 +33,18 @@ namespace mikado::windowsApi {
       bool startFailed() const {
          return startFailed_;
       }
+      void startFailed(bool newValue) {
+         startFailed_ = newValue;
+      }
+      boost::posix_time::ptime startAttemptedAt() const {
+         return startAttemptedAt_;
+      }
+      void startAttemptedAt(boost::posix_time::ptime newValue) {
+         startAttemptedAt_ = newValue;
+      }
 
    protected:
+      MikadoErrorCode interceptStdHandles();
       MikadoErrorCode doRun();
       MikadoErrorCode closeProcessHandles();
 
@@ -43,8 +53,10 @@ namespace mikado::windowsApi {
 
       bool shutdownRequested_ = false;
       unsigned shutdownTimeout_ = 5000;
+      boost::posix_time::ptime startAttemptedAt_;
       bool isRunning_ = false;
       bool startFailed_ = false;
+      bool interceptStd_ = false;
       bool waitForProcess_ = false;
       DWORD exitCode_ = (DWORD)-1;
 

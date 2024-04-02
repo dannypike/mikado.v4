@@ -33,7 +33,8 @@ namespace mikado::common {
    string const kInstanceId{ "instanceId" };
    string const kRoot{ "root" };
    string const kStartApp{ "start-app" };
-   string const kStartFolder{ "startFolder" };
+   string const kStartComspec{ "start-comspec" };
+   string const kStartFolder{ "start-folder" };
    string const kStartRetry{ "start-retry" };
 
    // fields are used in websocket messages

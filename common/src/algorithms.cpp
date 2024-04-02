@@ -232,12 +232,15 @@ namespace mikado::common {
          }
          else if (!defaultValue) {
             // If there is no default value, then we will log an error
-            str_error() << "json value does not have property '" << propertyName << "'" << endl;
+            str_error() << "json value " << jv << " (" << jv.kind()
+               << ") does not have property '" << propertyName << "'" << endl;
          }
       }
       else if (!defaultValue) {
          // If there is no default value, then we will log an error
-         str_error() << "json value is not an object - cannot find property '" << propertyName << "'" << endl;
+         str_error() << "json value " << jv << " is a " << jv.kind()
+            << ", when expecting an object with a property called '"
+            << propertyName << "'" << endl;
       }
       return defaultValue ? defaultValue : string();
    }
@@ -251,7 +254,7 @@ namespace mikado::common {
       if (propertyName && jv.is_object()) {
          auto jo = jv.as_object();
          if (!jo.contains(propertyName)) {
-            str_error() << "json value does not have property '" << propertyName << "'" << endl;
+            str_error() << "json object " << jv << " does not have property '" << propertyName << "'" << endl;
             return MikadoErrorCode::MKO_ERROR_INVALID_CONFIG;
          }
          jv = jo.at(propertyName);
@@ -259,11 +262,12 @@ namespace mikado::common {
 
       // If the json value is not now an array, then bomb out
       if (!jv.is_array()) {
-         str_error() << "json value ";
+         stringstream ss;
+         ss << "json value " << jv;
          if (propertyName) {
-            str_error() << " at property '" << propertyName << "' ";
+            ss << " at property '" << propertyName << "' ";
          }
-         str_error() << "is not an array" << endl;
+         str_error() << ss.rdbuf() << "is a '" << jv.kind() << "', when expecting an array" << endl;
          return MikadoErrorCode::MKO_ERROR_INVALID_CONFIG;
       }
       

@@ -4,6 +4,7 @@
 #include "broker/appManager.h"
 
 namespace api = mikado::windowsApi;
+namespace bt = boost::posix_time;
 namespace common = mikado::common;
 namespace guids = boost::uuids;
 namespace json = boost::json;
@@ -21,6 +22,8 @@ namespace mikado::broker {
       for (auto const &app : cfg->get<vector<string>>(common::kStartApp)) {
          try
          {
+            vector<string> args;
+
             ++appIndex;
 
             error_code ec;
@@ -48,25 +51,36 @@ namespace mikado::broker {
                      << startFolder << ", and cannot be created" << endl;
                   return MikadoErrorCode::MKO_ERROR_APP_CONFIGURE;
                }
+               str_debug() << "created folder " << startFolder << " for app '" << appId << "'" << endl;
             }
 
-            // Extract the arguments for the app
-            vector<string> args;
+            // Should we run the app inside a Command Prompt?
+            if (auto rc = configureComspec(jv, appId, args, exePath); MKO_IS_ERROR(rc)) {
+               return rc;
+            }
+
+            // Extract the arguments for the app and add them to the args
             if (auto rc = common::jsonVectorString(args, jv, common::kArgs.c_str()); MKO_IS_ERROR(rc)) {
                str_error() << "Error parsing app '" << appId << "' arguments: " << rc << endl;
                return rc;
             }
 
+            // Allocate an InstanceId for this app
+            auto app = addAppInstance(appId);
+            args.emplace_back("--" + common::kAppId);
+            args.push_back(appId);
+            args.emplace_back("--" + common::kInstanceId);
+            args.emplace_back(app->instanceId());
+
             // Construct the propcess object that will manage the running app
             auto process = make_shared<api::WindowsProcess>(appId.c_str());
             process->setFolder(startFolder);
             process->setExecutable(exePath);
+
+            // Transfer the command-line arguments
             for (auto const &arg : args) {
                process->addArgument(arg);
             }
-
-            // Allocate an InstanceId for this app
-            auto app = addAppInstance(appId);
 
             // And store the process in it
             app->setProcess(process);
@@ -82,6 +96,44 @@ namespace mikado::broker {
 
    ///////////////////////////////////////////////////////////////////////////
    //
+   MikadoErrorCode AppManager::configureComspec(json::value const &jv, std::string const &appId
+         , vector<string> &args, path &exePath) {
+
+      vector<string> argsComspec;
+      if (jv.is_object() && jv.as_object().contains(common::kStartComspec.c_str())) {
+         if (auto rc = common::jsonVectorString(argsComspec, jv
+               , common::kStartComspec.c_str()); MKO_IS_ERROR(rc)) {
+            return rc;
+         }
+      }
+      if (argsComspec.empty()) {
+         return MikadoErrorCode::MKO_STATUS_NOOP;
+      }
+
+      path cmdPath{ common::lexicalPath(getenv("COMSPEC")) };
+      if (cmdPath.empty() || !exists(cmdPath)) {
+         str_error() << "App '" << appId << "' cannot run under Command Prompt, as the COMSPEC "
+            "environment variable is invalid / does not exist: " << cmdPath << endl;
+         return MikadoErrorCode::MKO_ERROR_APP_COMSPEC;
+      }
+
+      // Insert the COMSPEC arguments
+      str_debug() << "App '" << appId << "' will run inside a Command Prompt configured with "
+         << argsComspec.size() << " argument(s): " << endl;
+      for (auto aa : argsComspec) {
+         str_debug() << "  \"" << aa << "\"" << endl;
+         args.emplace_back(aa);
+      }
+
+      // replace the exe name with the Command Prompt exe
+      args.emplace_back(exePath.string());
+      exePath = move(cmdPath);
+      
+      return MikadoErrorCode::MKO_ERROR_NONE;
+   }
+
+   ///////////////////////////////////////////////////////////////////////////
+   //
    AppPtr AppManager::addAppInstance(AppId const &appId) {
       
       InstanceStorePtr appInstances;
@@ -90,6 +142,7 @@ namespace mikado::broker {
       }
       else {
          appInstances = make_shared<InstanceStore>();
+         appStore_.insert(make_pair(appId.toString(), appInstances));
       }
 
       guids::random_generator generator;
@@ -97,7 +150,7 @@ namespace mikado::broker {
       AppInstanceId instanceId { boost::lexical_cast<std::string>(uuid) };
       auto app = make_shared<App>(appId, instanceId);
       appInstances->insert(make_pair(instanceId.toString(), app));
-      str_info() << "Created new app '" << appId << "' with instanceId '" << instanceId;
+      str_info() << "Created new app '" << appId << "' with instanceId '" << instanceId << endl;
       return app;
    }
 
@@ -139,11 +192,20 @@ namespace mikado::broker {
    //
    MikadoErrorCode AppManager::runAppManager(common::ConfigurePtr options) {
 
+      auto now = bt::second_clock::universal_time();
+      auto retryDelay = options->get<int>(common::kStartRetry);
+
       // Make sure that each of the apps that we need to start is running
       auto startableApps = vector<AppPtr>{};
       for (auto const &[appId, appInstances] : appStore_) {
          for (auto const &[instanceId, app] : *appInstances) {
             auto process = app->getProcess();
+            if (process->startFailed()) {
+               if ((retryDelay >= 0) && (now >= process->startAttemptedAt() + bt::milliseconds(retryDelay))) {
+                  // It's OK to try again
+                  process->startFailed(false);
+               }
+            }
             if (process && !process->isRunning() && !process->startFailed()) {
                startableApps.push_back(app);
             }
@@ -151,11 +213,6 @@ namespace mikado::broker {
       }
 
       if (startableApps.empty()) {
-         static bool firstTime = true;
-         if (firstTime) {
-            str_info() << "No apps to start" << endl;
-            firstTime = false;
-         }
          return MikadoErrorCode::MKO_STATUS_NOOP;
       }
 
@@ -169,16 +226,18 @@ namespace mikado::broker {
                return MikadoErrorCode::MKO_ERROR_APP_START;
             }
             if (process->isRunning()) {
+               // already running
                continue;
             }
             if (process->startFailed()) {
-               str_error() << "App '" << app->appId() << "' failed to start" << endl;
+               // Already output an error message
                return MikadoErrorCode::MKO_ERROR_APP_START;
             }
 
             // Start the app
+            process->startAttemptedAt(bt::second_clock::universal_time());
             if (auto rc = process->run(); MKO_IS_ERROR(rc)) {
-               str_error() << "Error starting app '" << app->appId() << "': " << rc << endl;
+               // Already output an error message
                return rc;
             }
          }
@@ -190,11 +249,6 @@ namespace mikado::broker {
       }
 
       return MikadoErrorCode::MKO_ERROR_NONE;
-   }
-
-   ///////////////////////////////////////////////////////////////////////////
-   //
-   void AppManager::shutdownAppManager() {
    }
 
 } // namespace mikado::broker

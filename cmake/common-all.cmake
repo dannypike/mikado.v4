@@ -40,6 +40,7 @@ target_precompile_headers(${TARGET} PRIVATE
    # Boost
    <boost/algorithm/string/predicate.hpp>
    <boost/date_time/posix_time/posix_time.hpp>
+   <boost/dll.hpp>
    <boost/iostreams/concepts.hpp>
    <boost/iostreams/stream_buffer.hpp>
    <boost/json.hpp>
@@ -56,7 +57,7 @@ else()
 target_precompile_headers(${TARGET} REUSE_FROM common)
 endif()
 
-find_package(Boost REQUIRED COMPONENTS date_time json program_options system)
+find_package(Boost REQUIRED COMPONENTS date_time filesystem json program_options system)
 target_include_directories(${TARGET} PRIVATE ${Boost_INCLUDE_DIRS})
 target_link_libraries(${TARGET} PRIVATE ${Boost_LIBRARIES})
 
