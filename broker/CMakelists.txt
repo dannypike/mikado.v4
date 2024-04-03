@@ -28,4 +28,7 @@ include(${CMAKE_FOLDER}/common-exe.cmake)
 # Settings and switches for all Mikado projects
 include(${CMAKE_FOLDER}/common-all.cmake)
 
+# Turn off the console window; this app creates a GUI
+include(${CMAKE_FOLDER}/gui.cmake)
+
 include(${CMAKE_FOLDER}/footer.cmake)

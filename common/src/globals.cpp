@@ -1,4 +1,5 @@
 // Copyright (c) 2024 Gamaliel Ltd
+#include "common/algorithms.h"
 #include "common/errorCodes.h"
 #include "common/globals.h"
 #include "common/logger.h"
@@ -71,3 +72,24 @@ namespace mikado::common {
    }
 
 } // namespace mikado::common
+
+#ifdef _WIN32
+
+//////////////////////////////////////////////////////////////////////////
+// For GUI apps, we need a WinMain
+//
+int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance
+   , LPSTR lpCmdLine, int nCmdShow)
+{
+   // Convert the lpCmdline into argv & argv
+   vector<string> args;
+   vector<char *> argv;
+   wstring cmdline{ move(mikado::common::toString(lpCmdLine)) };
+   int argc = mikado::common::parseCommandline(cmdline, args, &argv);
+
+   // And then call the normal main() function
+   extern int main(int argc, char *argv[]);
+   return main(argc, &argv[0]);
+}
+
+#endif // _WIN32
