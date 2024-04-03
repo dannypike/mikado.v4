@@ -50,21 +50,38 @@ namespace mikado::common {
    ///////////////////////////////////////////////////////////////////////////
    //
    MikadoErrorCode Configure::importFile(path const &cfgFilename) {
-      if (!exists(cfgFilename.string())) {
+      if (cfgFilename.empty() || !exists(cfgFilename.string())) {
          return MikadoErrorCode::MKO_ERROR_PATH_NOT_FOUND;
       }
 
-      str_debug() << "reading configuration file " << cfgFilename << endl;
-      auto parsedFile = po::parse_config_file<char>(cfgFilename.string().c_str(), *options_);
-      po::store(parsedFile, *values_, true);
+      try
+      {
+         str_debug() << "reading configuration file " << cfgFilename << endl;
+         auto parsedFile = po::parse_config_file<char>(cfgFilename.string().c_str(), *options_);
+         po::store(parsedFile, *values_, true);
+      }
+      catch (const std::exception &e)
+      {
+         log_exception(e);
+         return MikadoErrorCode::MKO_ERROR_INVALID_CONFIG;
+      }
       return MikadoErrorCode::MKO_ERROR_NONE;
    }
 
    ///////////////////////////////////////////////////////////////////////////
    //
    MikadoErrorCode Configure::importCommandline(int argc, char *argv[]) {
-      auto parsedCmdline = po::parse_command_line(argc, argv, *options_);
-      po::store(parsedCmdline, *values_, true);
+
+      try
+      {
+         auto parsedCmdline = po::parse_command_line(argc, argv, *options_);
+         po::store(parsedCmdline, *values_, true);
+      }
+      catch (const std::exception &e)
+      {
+         log_exception(e);
+         return MikadoErrorCode::MKO_ERROR_INVALID_CONFIG;
+      }
       return MikadoErrorCode::MKO_ERROR_NONE;
    }
 

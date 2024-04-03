@@ -18,74 +18,42 @@ namespace mikado::broker {
    ///////////////////////////////////////////////////////////////////////////
    //
    MikadoErrorCode AppManager::configureAppManager(common::ConfigurePtr cfg) {
-      auto appIndex = 0;
+      auto appIndex = 0;   // for debug messages
       for (auto const &app : cfg->get<vector<string>>(common::kStartApp)) {
          try
          {
-            vector<string> args;
-
             ++appIndex;
 
             error_code ec;
             json::value jv = json::parse(app, ec);
-            if (ec) {
-               str_error() << "Error parsing app definition #" << appIndex << ": " << ec.message() << endl;
-               return MikadoErrorCode::MKO_ERROR_APP_CONFIGURE;
-            }
-            string appId{ jv.at(common::kAppId).as_string().c_str() };
-            str_info() << "Configuring app '" << appId << "'" << endl;
-
-            // The exe pathname is either absolute or it is relative to the Broker exe
-            path exePath{ move(common::lexicalPath(common::jsonPropertyString(jv, common::kExePath).c_str())) };
-            if (!exists(exePath)) {
-               str_error() << "App '" << appId << "' exe not found: " << exePath << endl;
+            if (ec || !jv.is_object()) {
+               auto error = ec ? ec.message() : "not an object";
+               str_error() << "Error parsing app definition #" << appIndex << ": " << error << endl;
                return MikadoErrorCode::MKO_ERROR_APP_CONFIGURE;
             }
 
-            // The "current folder" for the app is relative ot the app's folder, not the Broker's current folder
-            // and not relative to the Broker exe (unless that's the same as the app's exe folder).
-            path startFolder{ move(common::lexicalPath(common::jsonPropertyString(jv, common::kStartFolder).c_str())) };
-            if (!exists(startFolder)) {
-               if (!create_directories(startFolder)) {
-                  str_error() << "App '" << appId << "' start folder not found: "
-                     << startFolder << ", and cannot be created" << endl;
-                  return MikadoErrorCode::MKO_ERROR_APP_CONFIGURE;
+            json::object jo = jv.as_object();
+            string appId{ jo.at(common::kAppId).as_string().c_str() };
+
+            // If there is an instanceId specified, then we use that and wait for the app to be started
+            // manually (this is for debugging apps). Otherwise, we generate one and start the app
+            // ourselves (this is for normal operation).
+            if (jo.contains(common::kInstanceId)) {
+               // Debugging where we want to start the apps manually and have the broker wait for them
+               string instanceIdStr { jo.at(common::kInstanceId).as_string().c_str() };
+               str_info() << "adding a placeholder for app '" << appId << "' with instanceId '"
+                  << instanceIdStr << "', to be started separately" << endl;
+               auto app = addAppInstance(appId, instanceIdStr.c_str());
+            }
+            else {
+               // Normal operation, where the broker manages the lifetimes of the apps.
+               str_info() << "Configuring app '" << appId << "', to be started by the Broker" << endl;
+               if (auto rc = configureStartup(jo, appId); MKO_IS_ERROR(rc)) {
+                  return rc;
                }
-               str_debug() << "created folder " << startFolder << " for app '" << appId << "'" << endl;
             }
-
-            // Should we run the app inside a Command Prompt?
-            if (auto rc = configureComspec(jv, appId, args, exePath); MKO_IS_ERROR(rc)) {
-               return rc;
-            }
-
-            // Extract the arguments for the app and add them to the args
-            if (auto rc = common::jsonVectorString(args, jv, common::kArgs.c_str()); MKO_IS_ERROR(rc)) {
-               str_error() << "Error parsing app '" << appId << "' arguments: " << rc << endl;
-               return rc;
-            }
-
-            // Allocate an InstanceId for this app
-            auto app = addAppInstance(appId);
-            args.emplace_back("--" + common::kAppId);
-            args.push_back(appId);
-            args.emplace_back("--" + common::kInstanceId);
-            args.emplace_back(app->instanceId());
-
-            // Construct the propcess object that will manage the running app
-            auto process = make_shared<api::WindowsProcess>(appId.c_str());
-            process->setFolder(startFolder);
-            process->setExecutable(exePath);
-
-            // Transfer the command-line arguments
-            for (auto const &arg : args) {
-               process->addArgument(arg);
-            }
-
-            // And store the process in it
-            app->setProcess(process);
          }
-         catch (const std::exception &e)
+         catch (const exception &e)
          {
             log_exception(e);
             return MikadoErrorCode::MKO_ERROR_APP_CONFIGURE;
@@ -96,7 +64,7 @@ namespace mikado::broker {
 
    ///////////////////////////////////////////////////////////////////////////
    //
-   MikadoErrorCode AppManager::configureComspec(json::value const &jv, std::string const &appId
+   MikadoErrorCode AppManager::configureComspec(json::value const &jv, string const &appId
          , vector<string> &args, path &exePath) {
 
       vector<string> argsComspec;
@@ -134,7 +102,66 @@ namespace mikado::broker {
 
    ///////////////////////////////////////////////////////////////////////////
    //
-   AppPtr AppManager::addAppInstance(AppId const &appId) {
+   MikadoErrorCode AppManager::configureStartup(json::value const &jv, string const &appId) {
+
+      vector<string> args;
+
+      // The exe pathname is either absolute or it is relative to the Broker exe
+      path exePath{ move(common::lexicalPath(common::jsonPropertyString(jv, common::kExePath).c_str())) };
+      if (!exists(exePath)) {
+         str_error() << "App '" << appId << "' exe not found: " << exePath << endl;
+         return MikadoErrorCode::MKO_ERROR_APP_CONFIGURE;
+      }
+
+      // The "current folder" for the app is relative ot the app's folder, not the Broker's current folder
+      // and not relative to the Broker exe (unless that's the same as the app's exe folder).
+      path startFolder{ move(common::lexicalPath(common::jsonPropertyString(jv, common::kStartFolder).c_str())) };
+      if (!exists(startFolder)) {
+         if (!create_directories(startFolder)) {
+            str_error() << "App '" << appId << "' start folder not found: "
+               << startFolder << ", and cannot be created" << endl;
+            return MikadoErrorCode::MKO_ERROR_APP_CONFIGURE;
+         }
+         str_debug() << "created folder " << startFolder << " for app '" << appId << "'" << endl;
+      }
+
+      // Should we run the app inside a Command Prompt?
+      if (auto rc = configureComspec(jv, appId, args, exePath); MKO_IS_ERROR(rc)) {
+         return rc;
+      }
+
+      // Extract the arguments for the app and add them to the args
+      if (auto rc = common::jsonVectorString(args, jv, common::kArgs.c_str()); MKO_IS_ERROR(rc)) {
+         str_error() << "Error parsing app '" << appId << "' arguments: " << rc << endl;
+         return rc;
+      }
+
+      // Allocate an InstanceId for this app
+      auto app = addAppInstance(appId);
+      args.emplace_back("--" + common::kAppId);
+      args.push_back(appId);
+      args.emplace_back("--" + common::kInstanceId);
+      args.emplace_back(app->instanceId());
+
+      // Construct the propcess object that will manage the running app
+      auto process = make_shared<api::WindowsProcess>(appId.c_str());
+      process->setFolder(startFolder);
+      process->setExecutable(exePath);
+
+      // Transfer the command-line arguments
+      for (auto const &arg : args) {
+         process->addArgument(arg);
+      }
+
+      // And store the process in it
+      app->setProcess(process);
+
+      return MikadoErrorCode::MKO_ERROR_NONE;
+   }
+
+   ///////////////////////////////////////////////////////////////////////////
+   //
+   AppPtr AppManager::addAppInstance(AppId const &appId, char const *explicitId) {
       
       InstanceStorePtr appInstances;
       if (auto it = appStore_.find(appId.toString()); it != appStore_.end()) {
@@ -145,12 +172,20 @@ namespace mikado::broker {
          appStore_.insert(make_pair(appId.toString(), appInstances));
       }
 
-      guids::random_generator generator;
-      guids::uuid uuid = generator();
-      AppInstanceId instanceId { boost::lexical_cast<std::string>(uuid) };
+      // The normal case is for us to generate a new instanceId. When debugging the app in
+      // Visual Studio, we can specify the instanceId explicitly, so that they match up.
+      string instanceIdStr { explicitId ? explicitId : "" };
+      if (instanceIdStr.empty()) {
+         guids::random_generator generator;
+         guids::uuid uuid = generator();
+         instanceIdStr = boost::lexical_cast<string>(uuid);
+      }
+
+      AppInstanceId instanceId { instanceIdStr };
       auto app = make_shared<App>(appId, instanceId);
-      appInstances->insert(make_pair(instanceId.toString(), app));
-      str_info() << "Created new app '" << appId << "' with instanceId '" << instanceId << endl;
+      appInstances->insert(make_pair(instanceIdStr, app));
+      str_info() << "Created new app '" << appId << "' with instanceId '"
+         << instanceId << "'" << endl;
       return app;
    }
 
@@ -196,23 +231,28 @@ namespace mikado::broker {
       auto retryDelay = options->get<int>(common::kStartRetry);
 
       // Make sure that each of the apps that we need to start is running
+      // Do nothing for apps that will be started manually, e.g. because they are
+      // being debugged in Visual Studio.
       auto startableApps = vector<AppPtr>{};
       for (auto const &[appId, appInstances] : appStore_) {
          for (auto const &[instanceId, app] : *appInstances) {
-            auto process = app->getProcess();
-            if (process->startFailed()) {
-               if ((retryDelay >= 0) && (now >= process->startAttemptedAt() + bt::milliseconds(retryDelay))) {
-                  // It's OK to try again
-                  process->startFailed(false);
+            if (auto process = app->getProcess(); process) {
+               // This is an app that we must start
+               if (process->startFailed()) {
+                  if ((retryDelay >= 0) && (now >= process->startAttemptedAt() + bt::milliseconds(retryDelay))) {
+                     // It's OK to try again
+                     process->startFailed(false);
+                  }
                }
-            }
-            if (process && !process->isRunning() && !process->startFailed()) {
-               startableApps.push_back(app);
+               if (!process->isRunning() && !process->startFailed()) {
+                  startableApps.push_back(app);
+               }
             }
          }
       }
 
       if (startableApps.empty()) {
+         // There are no apps to be started
          return MikadoErrorCode::MKO_STATUS_NOOP;
       }
 
@@ -241,7 +281,7 @@ namespace mikado::broker {
                return rc;
             }
          }
-         catch (const std::exception &e)
+         catch (const exception &e)
          {
             log_exception(e);
             return MikadoErrorCode::MKO_ERROR_APP_START;

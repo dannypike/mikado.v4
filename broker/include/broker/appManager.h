@@ -12,7 +12,7 @@ namespace mikado::broker {
 
    public:
       MikadoErrorCode configureAppManager(common::ConfigurePtr cfg);
-      AppPtr addAppInstance(AppId const &appId);
+      AppPtr addAppInstance(AppId const &appId, char const *instanceId = nullptr);
       MikadoErrorCode dropAppInstance(AppPtr app);
       MikadoErrorCode dropAppInstance(AppId const &appId, AppInstanceId const &instanceId);
       MikadoErrorCode runAppManager(common::ConfigurePtr options);
@@ -24,6 +24,7 @@ namespace mikado::broker {
 
       MikadoErrorCode configureComspec(boost::json::value const &jv, std::string const &appId
          , std::vector<std::string> &args, std::filesystem::path &exePath);
+      MikadoErrorCode configureStartup(boost::json::value const &jv, std::string const &appId);
 
    private:
       AppStore appStore_;

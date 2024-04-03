@@ -157,6 +157,7 @@ namespace mikado::broker {
    void Handler::onMessage(ix::WebSocket &ws
       , ConnectionStatePtr state, ix::WebSocketMessagePtr const &msg) {
       str_error() << "websocket msg: '" << msg->str << "'" << endl;
+      MikadoErrorCode rc = MikadoErrorCode::MKO_ERROR_NOT_IMPLEMENTED;
    }
 
    ///////////////////////////////////////////////////////////////////////////
@@ -164,6 +165,7 @@ namespace mikado::broker {
    void Handler::onClose(ix::WebSocket &ws
       , ConnectionStatePtr state, ix::WebSocketMessagePtr const &msg) {
       str_error() << "websocket connection closed: " << msg->str << endl;
+      MikadoErrorCode rc = MikadoErrorCode::MKO_ERROR_NOT_IMPLEMENTED;
    }
 
 } // namespace mikado::broker
