@@ -1,0 +1,35 @@
+# Copyright (c) 2024 Gamaliel Ltd
+#
+# Imgui
+#
+# 3.16 is required for target_precompile_headers(...PRECOMPILE_HEADERS_REUSE_FROM...)
+# 3.25 is required for CMAKE_C_COMPILE_OPTIONS_MSVC_DEBUG_INFORMATION_FORMAT
+cmake_minimum_required (VERSION 3.25)
+
+set(DUMP_VARIABLES FALSE)
+set(PROJECT_NAME Imgui)
+set(TARGET imgui)
+
+set(CMAKE_FOLDER ${CMAKE_CURRENT_SOURCE_DIR}/../cmake)
+include(${CMAKE_FOLDER}/header.cmake)
+
+set(SRC_FILES
+   # Library source files
+   src/guiBase.cpp
+
+   # The base files of Dear ImGui
+   # src/imgui/imgui_demo.cpp
+   src/imgui/imgui.cpp
+   src/imgui/imgui_draw.cpp
+   src/imgui/imgui_impl_dx9.cpp
+   src/imgui/imgui_impl_win32.cpp
+   src/imgui/imgui_tables.cpp
+   src/imgui/imgui_widgets.cpp
+
+   # Implot TBA
+)
+
+# Settings and switches for all Mikado projects
+include(${CMAKE_FOLDER}/common-lib.cmake)
+include(${CMAKE_FOLDER}/common-all.cmake)
+include(${CMAKE_FOLDER}/footer.cmake)

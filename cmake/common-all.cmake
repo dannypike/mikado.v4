@@ -5,6 +5,7 @@ set_property(TARGET ${TARGET} PROPERTY CXX_STANDARD 20)	# std::jthread requires 
 target_include_directories(${TARGET} PUBLIC
    ${COMMON_FOLDER}/include
    ${API_FOLDER}/include
+   ${IMGUI_FOLDER}/include
    ${CMAKE_CURRENT_SOURCE_DIR}/include
 )
 
@@ -25,6 +26,7 @@ target_precompile_headers(${TARGET} PRIVATE
    <winsock2.h>
 	"../include/windows-hack.h"	# undef's min and max
 	<wincrypt.h>
+	<d3d9.h>	# Direct3D #9
 
 	# OpenSSL
 	<openssl/bio.h>
