@@ -8,5 +8,6 @@ set_target_properties(${TARGET} PROPERTIES OUTPUT_NAME ${TARGET})
 target_link_libraries(${TARGET} PRIVATE
    ${LIB_FOLDER}/windowsApi.lib
    ${LIB_FOLDER}/common.lib
+   ${LIB_FOLDER}/imgui.lib
    bcrypt.lib
 )

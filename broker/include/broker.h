@@ -17,6 +17,7 @@ namespace mikado::broker {
 #include "broker/appInstanceId.h"
 #include "broker/app.h"
 #include "broker/appManager.h"
+#include "broker/gui.h"
 #include "broker/handler.h"
 
 #endif // BROKER_H

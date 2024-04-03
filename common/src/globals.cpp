@@ -38,6 +38,7 @@ namespace mikado::common {
    string const kStartComspec{ "start-comspec" };
    string const kStartFolder{ "start-folder" };
    string const kStartRetry{ "start-retry" };
+   string const kWindowBroker { "Mikado Broker" };
 
    // fields are used in websocket messages
    string fieldAction{ "action" };

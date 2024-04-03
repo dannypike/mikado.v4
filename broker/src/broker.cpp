@@ -71,6 +71,9 @@ namespace mikado::broker {
 
       str_notice() << "Broker is listening for connections on " << handler->getUrl() << endl;
 
+      // Create the GUI
+      auto gui = make_shared<Gui>(options);
+
       // "Event" loop
       auto exitCode = MikadoErrorCode::MKO_ERROR_NONE;
       while (!common::MikadoShutdownRequested) {
@@ -80,10 +83,16 @@ namespace mikado::broker {
             break;
          }
 
+         bool workDone = false;
+         if (!gui->processWin32Messages(workDone)) {
+            exitCode = MikadoErrorCode::MKO_STATUS_EXITOK;
+            break;
+         }
+
          this_thread::sleep_for(100ms);
       }
 
-      str_notice() << "Broker is shutting down" << endl;
+      str_notice() << "Broker is shutting down with exit code " << exitCode << endl;
       handler->shutdown();
 
       return exitCode;

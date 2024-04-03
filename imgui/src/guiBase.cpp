@@ -5,6 +5,8 @@
 
 using namespace std;
 
+extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
+
 namespace mikado::gui {
 
    LPDIRECT3D9 GuiBase::direct3D_ = nullptr;
@@ -21,6 +23,8 @@ namespace mikado::gui {
    GuiBase::GuiBase(string const &windowTitle)
          : clearColor_(0.45f, 0.55f, 0.60f, 1.00f)
          , windowTitle_(windowTitle) {
+
+      str_debug() << "creating gui window" << endl;
       createWindow();
    }
 
@@ -30,9 +34,9 @@ namespace mikado::gui {
 
    bool GuiBase::createWindow() {
       // Create application window
-      //ImGui_ImplWin32_EnableDpiAwareness();
-      ::RegisterClassExW(&wc_);
+      ImGui_ImplWin32_EnableDpiAwareness();
 
+      ::RegisterClassExW(&wc_);
       hWnd_ = ::CreateWindowW(wc_.lpszClassName, common::toString(windowTitle_).c_str()
          , WS_OVERLAPPEDWINDOW, 100, 100, 1280, 800, nullptr, nullptr, wc_.hInstance, nullptr);
       if (!hWnd_) {
@@ -156,7 +160,6 @@ namespace mikado::gui {
       //IM_ASSERT(font != nullptr);
    }
 
-   extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
    LRESULT WINAPI GuiBase::WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) {
       if (ImGui_ImplWin32_WndProcHandler(hWnd, msg, wParam, lParam))
          return true;

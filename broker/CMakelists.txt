@@ -19,6 +19,7 @@ set(SRC_FILES
    src/appManager.cpp
    src/broker.cpp
    src/globals.cpp
+   src/gui.cpp
    src/handler.cpp
 )
 

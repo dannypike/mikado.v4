@@ -12,7 +12,7 @@ namespace mikado::gui {
       GuiBase(std::string const &windowTitle);
       virtual ~GuiBase();
 
-      virtual void render() = 0;
+      bool processWin32Messages(bool &workDone);
 
    protected:
       bool createWindow();
@@ -23,7 +23,6 @@ namespace mikado::gui {
       void ResetDevice();
       void CleanupDeviceD3D();
       void createFonts();
-      bool processWin32Messages(bool &workDone);
 
    private:
       static LPDIRECT3D9 direct3D_;
