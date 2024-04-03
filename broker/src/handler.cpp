@@ -1,9 +1,8 @@
 // Copyright (c) 2024 Gamaliel Ltd
+
 #include "common.h"
-//#include "windowsApi.h"
 #include "broker/handler.h"
 
-//namespace api = mikado::windowsApi;
 namespace common = mikado::common;
 namespace po = boost::program_options;
 typedef common::MikadoErrorCode MikadoErrorCode;

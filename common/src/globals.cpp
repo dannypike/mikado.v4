@@ -1,4 +1,5 @@
 // Copyright (c) 2024 Gamaliel Ltd
+
 #include "common/algorithms.h"
 #include "common/errorCodes.h"
 #include "common/globals.h"

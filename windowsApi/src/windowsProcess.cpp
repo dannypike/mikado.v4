@@ -1,4 +1,5 @@
 // Copyright (c) Gamaliel Ltd
+
 #include "common/algorithms.h"
 #include "common/errorCodes.h"
 #include "common/logger.h"

@@ -1,4 +1,5 @@
-// Copyright () 2024 Gamaliel Ltd
+// Copyright (c) 2024 Gamaliel Ltd
+
 #include "common/errorCodes.h"
 
 using namespace std;

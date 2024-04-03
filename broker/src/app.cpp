@@ -1,4 +1,5 @@
 // Copyright (c) 2024 Gamaliel Ltd
+
 #include "common.h"
 #include "windowsApi.h"
 #include "broker/appInstanceId.h"

@@ -1,4 +1,5 @@
 // Copyright (c) Gamaliel Ltd
+
 #include "common.h"
 #include "windowsApi/windowsFileMonitor.h"
 #include "windowsApi/windowsGlobals.h"

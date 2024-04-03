@@ -1,4 +1,5 @@
 // Copyright (c) Gamaliel Ltd
+
 #include "windowsApi/WindowsHandle.h"
 
 using namespace std;

@@ -1,3 +1,5 @@
+// Copyright (c) 2024 Gamaliel Ltd
+
 #include "common.h"
 
 namespace blf = boost::lockfree;
