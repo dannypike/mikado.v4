@@ -16,6 +16,7 @@ namespace mikado::common {
    // AppIds are used to identify the sending application in websocket messages
    string appIdBroker { "broker" };
    string appIdGlobber{ "globber" };
+   string appIdMakeMore{ "makeMore" };
    string appIdStorage{ "storage" };
 
    // String constants

@@ -1,0 +1,23 @@
+# Copyright (c) 2024 Gamaliel Ltd
+#
+# MakeMore is a n MLP test application for libtorch
+#
+# 3.16 is required for target_precompile_headers(...PRECOMPILE_HEADERS_REUSE_FROM...)
+# 3.25 is required for CMAKE_C_COMPILE_OPTIONS_MSVC_DEBUG_INFORMATION_FORMAT
+cmake_minimum_required (VERSION 3.25)
+
+set(DUMP_VARIABLES FALSE)
+set(PROJECT_NAME MakeMore)
+set(TARGET makeMore)
+
+set(CMAKE_FOLDER ${CMAKE_CURRENT_SOURCE_DIR}/../cmake)
+include(${CMAKE_FOLDER}/header.cmake)
+
+set(SRC_FILES
+   "src/makeMore.cpp"
+)
+
+# Settings and switches for all Mikado projects
+include(${CMAKE_FOLDER}/common-exe.cmake)
+include(${CMAKE_FOLDER}/common-all.cmake)
+include(${CMAKE_FOLDER}/footer.cmake)
