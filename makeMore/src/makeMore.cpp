@@ -32,7 +32,7 @@ namespace mikado::makeMore {
 
    //////////////////////////////////////////////////////////////////////////
    //
-   static void outputBanner() {
+   void MakeMore::outputBanner() {
       str_notice() << "MakeMore version " << MAKEMORE_VERSION_MAJOR << "." << MAKEMORE_VERSION_MINOR
          << " (" << __DATE__ << " " << __TIME__ << ")" << endl;
       str_notice() << "Copyright (c) 2024 Gamaliel Ltd" << endl << endl;
@@ -87,14 +87,14 @@ namespace mikado::makeMore {
       auto options = make_shared<common::Configure>(common::appIdMakeMore, "Mikado Makemore MLP", &*makeMore);
 
       // There is a typical sequence of processing options, that we do for all of the applications
-      auto rc = options->defaultProcessing(argc, argv, outputBanner);
+      auto rc = options->defaultProcessing(argc, argv, MakeMore::outputBanner);
       if (MikadoErrorCode::MKO_ERROR_NONE != rc) { // May be an MKO_STATUS, so we don't use MKO_IS_ERROR() here
          // Already output a message
          return rc;
       }
 
       // Set up Ctrl-C/break handler, suppress stdout debug-logging and display the banner
-      windowsApi::apiSetupConsole(options, outputBanner);
+      windowsApi::apiSetupConsole(options, MakeMore::outputBanner);
 
       auto exitCode = MikadoErrorCode::MKO_ERROR_DID_NOT_RUN;
       makeMore->start();
@@ -110,7 +110,7 @@ namespace mikado::makeMore {
 //////////////////////////////////////////////////////////////////////////
 //
 int main(int argc, char *argv[]) {
-    if (auto rc = common::commonInitialize(argc, argv, mikado::makeMore::outputBanner); MKO_IS_ERROR(rc)) {
+    if (auto rc = common::commonInitialize(argc, argv, mikado::makeMore::MakeMore::outputBanner); MKO_IS_ERROR(rc)) {
         return (int)rc;
     }
     if (auto rc = windowsApi::apiInitialize(argc, argv); MKO_IS_ERROR(rc)) {

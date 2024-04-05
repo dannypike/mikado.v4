@@ -13,6 +13,9 @@ namespace mikado::makeMore {
 
    class MakeMore : public std::enable_shared_from_this<MakeMore>, public common::BrokerFYI {
    public:
+      static void outputBanner();
+
+      common::MikadoErrorCode configure(common::ConfigurePtr cfg);
       common::MikadoErrorCode start();
       common::MikadoErrorCode stop();
 
