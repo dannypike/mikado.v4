@@ -10,6 +10,7 @@ set(DUMP_VARIABLES FALSE)
 set(PROJECT_NAME MakeMore)
 set(TARGET makeMore)
 
+set(CMAKE_FOLDER ${CMAKE_CURRENT_SOURCE_DIR}/../cmake)
 include(${CMAKE_FOLDER}/header.cmake)
 
 set(SRC_FILES
