@@ -55,11 +55,6 @@ namespace mikado::common {
       return defaultValue ? *defaultValue : T{};
    }
 
-   // Convert a string to a vector of strings, splitting on whitespace, e.g. to convert the
-   // command line arguments to WinMain() into argc and argv for main()
-   int parseCommandline(std::wstring const &cmdLine, std::vector<std::string> &args
-      , std::vector<char *> *asArgv = nullptr);
-
 } // namespace mikado::common
 
 #endif // CMN_ALGORITHMS_H

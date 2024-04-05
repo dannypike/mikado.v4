@@ -327,21 +327,4 @@ namespace mikado::common {
       return vector<string>();
    }
 
-   ///////////////////////////////////////////////////////////////////////
-   //
-   int parseCommandline(wstring const &cmdLine, vector<string> &args
-      , vector<char *> *asArgv) {
-
-      int argc;
-      LPWSTR *wargv = CommandLineToArgvW(cmdLine.c_str(), &argc);
-      for (auto ii = 0; ii < argc; ++ii) {
-         args.emplace_back(common::toString(wargv[ii]));
-         if (asArgv) {
-            asArgv->push_back(&args.back()[0]);
-         }
-      }
-      LocalFree(wargv);
-      return argc;
-   }
-
 } // namespace mikado::common

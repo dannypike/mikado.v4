@@ -78,6 +78,23 @@ namespace mikado::common {
 
 #ifdef _WIN32
 
+///////////////////////////////////////////////////////////////////////
+//
+int parseCommandline(wstring const &cmdLine, vector<string> &args
+   , vector<char *> *asArgv) {
+
+   int argc;
+   LPWSTR *wargv = CommandLineToArgvW(cmdLine.c_str(), &argc);
+   for (auto ii = 0; ii < argc; ++ii) {
+      args.emplace_back(mikado::common::toString(wargv[ii]));
+      if (asArgv) {
+         asArgv->push_back(&args.back()[0]);
+      }
+   }
+   LocalFree(wargv);
+   return argc;
+}
+
 //////////////////////////////////////////////////////////////////////////
 // For GUI apps, we need a WinMain
 //
@@ -88,7 +105,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance
    vector<string> args;
    vector<char *> argv;
    wstring cmdline{ move(mikado::common::toString(lpCmdLine)) };
-   int argc = mikado::common::parseCommandline(cmdline, args, &argv);
+   int argc = parseCommandline(cmdline, args, &argv);
 
    // And then call the normal main() function
    extern int main(int argc, char *argv[]);
