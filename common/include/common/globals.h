@@ -29,6 +29,7 @@ namespace mikado::common {
    extern std::string const kConsoleQuiet;
    extern std::string const kConsoleRestoreOnExit;
    extern std::string const kConsoleTitle;
+   extern std::string const kCudaDevice;
    extern std::string const kDefault;
    extern std::string const kExclude;
    extern std::string const kExePath;

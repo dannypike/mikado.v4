@@ -28,6 +28,7 @@ namespace mikado::common {
    string const kConsoleQuiet{ "console-quiet" };
    string const kConsoleRestoreOnExit{ "console-restore-on-exit" };
    string const kConsoleTitle{ "console-title" };
+   string const kCudaDevice{ "cuda-device" };
    string const kDefault{ "default" };
    string const kExclude{ "exclude" };
    string const kExePath{ "exePath" };
