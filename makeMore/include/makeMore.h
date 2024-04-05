@@ -13,6 +13,9 @@ namespace mikado::makeMore {
 
    class MakeMore : public std::enable_shared_from_this<MakeMore>, public common::BrokerFYI {
    public:
+      MakeMore()
+      {
+      }
       static void outputBanner();
 
       common::MikadoErrorCode configure(common::ConfigurePtr cfg);
@@ -24,6 +27,7 @@ namespace mikado::makeMore {
 
    private:
       common::WebSocketPtr broker_;
+      std::string deviceName_;
    };
     
 } // namespace mikado::makeMore

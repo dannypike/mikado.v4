@@ -40,6 +40,13 @@ namespace mikado::makeMore {
 
    //////////////////////////////////////////////////////////////////////////
    //
+   common::MikadoErrorCode MakeMore::configure(common::ConfigurePtr cfg) {
+      deviceName_ = move(cfg->get<string>(common::kCudaDevice, deviceName_));
+      return MikadoErrorCode::MKO_ERROR_NOT_IMPLEMENTED;
+   }
+
+   //////////////////////////////////////////////////////////////////////////
+   //
    MikadoErrorCode MakeMore::start() {
       return MikadoErrorCode::MKO_ERROR_NOT_IMPLEMENTED;
    }
