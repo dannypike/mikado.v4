@@ -1,6 +1,7 @@
 // Copyright (c) 2024 Gamaliel Ltd
 
 #include "common.h"
+#include "torchure.h"
 #include "windowsApi.h"
 #include "makeMore.h"
 
@@ -41,6 +42,9 @@ namespace mikado::makeMore {
    //////////////////////////////////////////////////////////////////////////
    //
    common::MikadoErrorCode MakeMore::configure(common::ConfigurePtr cfg) {
+      if (auto rc = TorchureInitialize(); 100 < rc) {
+         return MikadoErrorCode::MKO_ERROR_TORCH;
+      }
       deviceName_ = move(cfg->get<string>(common::kCudaDevice, deviceName_));
       return MikadoErrorCode::MKO_ERROR_NOT_IMPLEMENTED;
    }
@@ -95,7 +99,7 @@ namespace mikado::makeMore {
 
       // There is a typical sequence of processing options, that we do for all of the applications
       auto rc = options->defaultProcessing(argc, argv, MakeMore::outputBanner);
-      if (MikadoErrorCode::MKO_ERROR_NONE != rc) { // May be an MKO_STATUS, so we don't use MKO_IS_ERROR() here
+      if (MikadoErrorCode::MKO_ERROR_MAXSTATUS < rc) { // May be an MKO_STATUS, so we don't use MKO_IS_ERROR() here
          // Already output a message
          return rc;
       }
@@ -103,13 +107,23 @@ namespace mikado::makeMore {
       // Set up Ctrl-C/break handler, suppress stdout debug-logging and display the banner
       windowsApi::apiSetupConsole(options, MakeMore::outputBanner);
 
-      auto exitCode = MikadoErrorCode::MKO_ERROR_DID_NOT_RUN;
-      makeMore->start();
+      if (auto rc = makeMore->configure(options); MKO_IS_ERROR(rc)) {
+         str_error() << "Failed to configure MakeMore - code: " << rc << endl;
+         return rc;
+      }
+
+      if (auto rc = makeMore->start(); MKO_IS_ERROR(rc)) {
+         str_error() << "Failed to start MakeMore - code: " << rc << endl;
+         return rc;
+      }
 
       str_info() << "shutting down" << endl;
-      makeMore->stop();
+      if (auto rc = makeMore->stop(); MKO_IS_ERROR(rc)) {
+         str_error() << "Failed to stop MakeMore - code: " << rc << endl;
+         return rc;
+      }
 
-      return exitCode;
+      return rc;
    }
     
 } // namespace mikado::makeMore

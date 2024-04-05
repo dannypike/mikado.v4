@@ -25,6 +25,7 @@ namespace mikado::common {
       (MKO_STATUS_UNKNOWN_CODE = 11)
       (MKO_STATUS_BROKER_AVAILABLE = 12)
       (MKO_STATUS_WAITING = 13)
+      (MKO_STATUS_BROKER_CONFIGURATION = 14)
 
       (MKO_ERROR_MAXSTATUS = 99)
       (MKO_ERROR_OPEN_FAILED = 100)
@@ -58,6 +59,7 @@ namespace mikado::common {
       (MKO_ERROR_APP_START = 128)
       (MKO_ERROR_APP_CONFIGURE = 129)
       (MKO_ERROR_APP_COMSPEC = 130)
+      (MKO_ERROR_TORCH = 131)
       )
 
    std::ostream &operator<<(std::ostream &os, enum MikadoErrorCode code);

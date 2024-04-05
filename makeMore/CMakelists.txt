@@ -17,7 +17,22 @@ set(SRC_FILES
    "src/makeMore.cpp"
 )
 
-# Settings and switches for all Mikado projects
+# Define the target as an EXE
 include(${CMAKE_FOLDER}/common-exe.cmake)
+
+# Link to Torchure - the PyTorch wrapper DLL
+include(${CMAKE_FOLDER}/torchure.cmake)
+target_link_libraries(${TARGET} PRIVATE ${TORCHURE_LIBRARIES})
+target_include_directories(${TARGET} PRIVATE ${TORCHURE_INCLUDE_DIRS})
+
+# Copy configuration
+file(GLOB TORCHURE_DLL_FILES ${TORCHURE_BIN_DIR}/*.dll;${TORCHURE_BIN_DIR}/*.pdb)
+foreach(II IN ITEMS ${TORCHURE_DLL_FILES})
+   get_filename_component(TORCHURE_DLL ${II} NAME)  
+   message("copying file ${II}")
+   configure_file(${TORCHURE_BIN_DIR}/${TORCHURE_DLL} ${CMAKE_CURRENT_SOURCE_DIR}/../bin/${TORCHURE_DLL} COPYONLY)
+endforeach()
+
+# Remaining settings and switches for Mikado projects
 include(${CMAKE_FOLDER}/common-all.cmake)
 include(${CMAKE_FOLDER}/footer.cmake)

@@ -115,6 +115,14 @@ namespace mikado::common {
    //
    MikadoErrorCode Configure::processBrokerMessage(ix::WebSocketMessagePtr const &msg) {
       switch (msg->type) {
+      case ix::WebSocketMessageType::Open:
+         str_debug() << "Broker connection is open" << endl;
+         return MikadoErrorCode::MKO_STATUS_NOOP;
+
+      case ix::WebSocketMessageType::Close:
+         str_debug() << "Broker connection is closed" << endl;
+         return MikadoErrorCode::MKO_ERROR_WEBSOCKET;
+
       case ix::WebSocketMessageType::Message:
       {
          // We have received a message from the broker, use it to reinitialize the configuration
@@ -126,8 +134,7 @@ namespace mikado::common {
       }
 
       default:
-         str_error() << "Received a non-message from the broker (type=" << msg->type
-            << "), will use local configuration" << endl;
+         str_error() << "Received a non-message from the broker; type=" << msg->type << endl;
          break;
       }
       return MikadoErrorCode::MKO_ERROR_WEBSOCKET;
@@ -229,6 +236,7 @@ namespace mikado::common {
             if (MikadoErrorCode::MKO_STATUS_BROKER_AVAILABLE == rc) {
                str_info() << "broker has responded, configuration updated" << endl;
                // We have received a new configuration from the broker
+               return MikadoErrorCode::MKO_STATUS_BROKER_CONFIGURATION;
             }
          }
       }
