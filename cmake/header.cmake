@@ -2,9 +2,6 @@ message("####################################################")
 message("Processing CMakeLists.txt for ${PROJECT_NAME}")
 message("")
 
-set(CMAKE_VERBOSE_MAKEFILE OFF)
-set(USE_GITHUB_IXWEBSOCKET TRUE)
-
 set(COMMON_FOLDER ${CMAKE_CURRENT_SOURCE_DIR}/../common)
 set(API_FOLDER ${CMAKE_CURRENT_SOURCE_DIR}/../windowsApi)
 set(IMGUI_FOLDER ${CMAKE_CURRENT_SOURCE_DIR}/../imgui)
@@ -21,5 +18,4 @@ project(${PROJECT_NAME})
 
 set(CMAKE_MSVC_DEBUG_INFORMATION_FORMAT "$<IF:$<AND:$<C_COMPILER_ID:MSVC>,$<CXX_COMPILER_ID:MSVC>>,$<$<CONFIG:Debug,RelWithDebInfo>:EditAndContinue>,$<$<CONFIG:Debug,RelWithDebInfo>:ProgramDatabase>>")
 set(Boost_NO_WARN_NEW_VERSIONS 1)	# Suppress version warning for Boost
-include(${CMAKE_FOLDER}/debugZI.cmake)
 

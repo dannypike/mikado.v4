@@ -1,9 +1,9 @@
 // Copyright (c) 2024 Gamaliel Ltd
 
 #include "common.h"
-#include "torchure.h"
 #include "windowsApi.h"
 #include "makeMore.h"
+#include <torch/torch.h>
 
 namespace api = mikado::windowsApi;
 namespace common = mikado::common;
@@ -42,9 +42,7 @@ namespace mikado::makeMore {
    //////////////////////////////////////////////////////////////////////////
    //
    common::MikadoErrorCode MakeMore::configure(common::ConfigurePtr cfg) {
-      if (auto rc = TorchureInitialize(); 100 < rc) {
-         return MikadoErrorCode::MKO_ERROR_TORCH;
-      }
+      torch::Tensor t;
       deviceName_ = move(cfg->get<string>(common::kCudaDevice, deviceName_));
       return MikadoErrorCode::MKO_ERROR_NOT_IMPLEMENTED;
    }

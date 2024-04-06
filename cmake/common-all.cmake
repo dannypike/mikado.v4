@@ -7,14 +7,14 @@ target_include_directories(${TARGET} PUBLIC
    ${API_FOLDER}/include
    ${IMGUI_FOLDER}/include
    ${CMAKE_CURRENT_SOURCE_DIR}/include
+   ${TORCH_INCLUDE_DIRS}
 )
 
 # Include ixWebSocket stuff
 include(${CMAKE_FOLDER}/ixwebsocket.cmake)
 
 # Import the standard precompiled headers
-if(${TARGET} STREQUAL "common")
-target_precompile_headers(${TARGET} PRIVATE
+set(PRECOMPILED_HEADER_FILES
    # Standard Library
    <cassert>
    <filesystem>
@@ -55,8 +55,16 @@ target_precompile_headers(${TARGET} PRIVATE
    <boost/uuid/uuid_generators.hpp>
    <boost/uuid/uuid_io.hpp>
 )
+
+if(${TARGET} STREQUAL "common")
+   target_precompile_headers(${TARGET} PRIVATE ${PRECOMPILED_HEADER_FILES})
+elseif(${TARGET} STREQUAL "makeMore")
+   # We need a separate-but-identical list for makeMore, because Torch is
+   # using different compiler switches (spefically the debug type)
+   target_precompile_headers(${TARGET} PRIVATE ${PRECOMPILED_HEADER_FILES})
 else()
-target_precompile_headers(${TARGET} REUSE_FROM common)
+   # Everything else uses the same precompiled file as common
+   target_precompile_headers(${TARGET} REUSE_FROM common)
 endif()
 
 find_package(Boost REQUIRED COMPONENTS date_time filesystem json program_options system)
