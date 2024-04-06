@@ -2,10 +2,12 @@
 
 #include "common.h"
 #include "windowsApi.h"
-#include "makeMore.h"
 #include <torch/torch.h>
+#include "makeMore.h"
+#include "makeMore/torch-enums.h"
 
 namespace api = mikado::windowsApi;
+namespace bt = boost::posix_time;
 namespace common = mikado::common;
 namespace po = boost::program_options;
 namespace windowsApi = mikado::windowsApi;
@@ -41,15 +43,49 @@ namespace mikado::makeMore {
 
    //////////////////////////////////////////////////////////////////////////
    //
+   void MakeMore::torchTest(bt::ptime startedAt) {
+      torch::Tensor tensor;
+      auto now = bt::second_clock::local_time();
+      auto count = 16384;
+      auto dims = 1024;
+      for (auto ii = 0; ii < count; ++ii) {
+         torch::Tensor tensor1 = torch::rand({ dims, dims }, device_);
+         torch::Tensor tensor2 = torch::rand({ dims, dims }, device_);
+         tensor = torch::mm(tensor1, tensor2);
+      }
+      auto elapsed = bt::second_clock::local_time() - startedAt;
+
+      str_info() << "The product of the two tensors is loaded into '"
+         << enum_hpp::to_string(tensor.device().type()).value_or("???") << "':" << endl
+         << "The calculations took " << elapsed << " seconds." << endl
+         ; // << tensor << endl;
+
+   }
+
+   //////////////////////////////////////////////////////////////////////////
+   //
    common::MikadoErrorCode MakeMore::configure(common::ConfigurePtr cfg) {
-      torch::Tensor t;
-      deviceName_ = move(cfg->get<string>(common::kCudaDevice, deviceName_));
-      return MikadoErrorCode::MKO_ERROR_NOT_IMPLEMENTED;
+
+      auto defaultName = enum_hpp::to_string(device_).value_or("cpu");
+      auto deviceName = cfg->get<string_view>("device", defaultName);
+      device_ = enum_hpp::from_string<c10::DeviceType>(deviceName).value_or(c10::DeviceType::CPU);
+
+      if (device_ == c10::DeviceType::CUDA) {
+         if (!torch::cuda::is_available()) {
+            device_ = c10::DeviceType::CPU;
+            str_error() << deviceName << " is not available. Falling back to '"
+               << enum_hpp::to_string(device_).value_or("cpu") << "'";
+            return MikadoErrorCode::MKO_STATUS_FALLBACK_TO_DEFAULT;
+         }
+      }
+      str_info() << "Using '" << deviceName << "'." << endl;
+      return MikadoErrorCode::MKO_ERROR_NONE;
    }
 
    //////////////////////////////////////////////////////////////////////////
    //
    MikadoErrorCode MakeMore::start() {
+      torchTest(bt::second_clock::local_time());
       return MikadoErrorCode::MKO_ERROR_NOT_IMPLEMENTED;
    }
 
