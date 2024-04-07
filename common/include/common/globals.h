@@ -31,6 +31,7 @@ namespace mikado::common {
    extern std::string const kConsoleTitle;
    extern std::string const kCudaDevice;
    extern std::string const kDefault;
+   extern std::string const kDevice;
    extern std::string const kExclude;
    extern std::string const kExePath;
    extern std::string const kHelp;
@@ -41,6 +42,7 @@ namespace mikado::common {
    extern std::string const kStartComspec;
    extern std::string const kStartFolder;
    extern std::string const kStartRetry;
+   extern std::string const kTest;
    extern std::string const kWindowBroker;
 
    // fields are used in websocket messages

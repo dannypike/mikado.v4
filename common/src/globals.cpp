@@ -30,6 +30,7 @@ namespace mikado::common {
    string const kConsoleTitle{ "console-title" };
    string const kCudaDevice{ "cuda-device" };
    string const kDefault{ "default" };
+   string const kDevice{ "device" };
    string const kExclude{ "exclude" };
    string const kExePath{ "exePath" };
    string const kHelp{ "help" };
@@ -40,6 +41,7 @@ namespace mikado::common {
    string const kStartComspec{ "start-comspec" };
    string const kStartFolder{ "start-folder" };
    string const kStartRetry{ "start-retry" };
+   string const kTest{ "test" };
    string const kWindowBroker { "Mikado Broker" };
 
    // fields are used in websocket messages

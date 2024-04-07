@@ -23,12 +23,13 @@ namespace mikado::makeMore {
       common::MikadoErrorCode stop();
 
    protected:
-      void torchTest(boost::posix_time::ptime startedAt);
+      void runTestMulMat(boost::posix_time::ptime startedAt);
       void onBrokerMessage(common::WebSocketPtr broker, ix::WebSocketMessagePtr const &msg);
 
    private:
       common::WebSocketPtr broker_;
       c10::DeviceType device_ = c10::DeviceType::CUDA;   // Default to CUDA and fallback if not found
+      std::vector<std::string> testNames_ { "MulMat" };
    };
     
 } // namespace mikado::makeMore

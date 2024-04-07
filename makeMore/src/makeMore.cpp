@@ -43,11 +43,15 @@ namespace mikado::makeMore {
 
    //////////////////////////////////////////////////////////////////////////
    //
-   void MakeMore::torchTest(bt::ptime startedAt) {
+   void MakeMore::runTestMulMat(bt::ptime startedAt) {
       torch::Tensor tensor;
       auto now = bt::second_clock::local_time();
       auto count = 16384;
       auto dims = 1024;
+      str_notice() << "Running test 'MulMat' with " << count
+         << " iterations of a matrix [" << dims << "x" << dims
+         << "]" << endl;
+
       for (auto ii = 0; ii < count; ++ii) {
          torch::Tensor tensor1 = torch::rand({ dims, dims }, device_);
          torch::Tensor tensor2 = torch::rand({ dims, dims }, device_);
@@ -65,10 +69,13 @@ namespace mikado::makeMore {
    //////////////////////////////////////////////////////////////////////////
    //
    common::MikadoErrorCode MakeMore::configure(common::ConfigurePtr cfg) {
+      string defaultName { enum_hpp::to_string(device_).value_or("cpu") };
+      string deviceName = cfg->get<string>(common::kDevice, defaultName);
+      string upperName(deviceName);
+      boost::to_upper(upperName);
+      device_ = enum_hpp::from_string<c10::DeviceType>(upperName).value_or(c10::DeviceType::CPU);
 
-      auto defaultName = enum_hpp::to_string(device_).value_or("cpu");
-      auto deviceName = cfg->get<string_view>("device", defaultName);
-      device_ = enum_hpp::from_string<c10::DeviceType>(deviceName).value_or(c10::DeviceType::CPU);
+      testNames_ = cfg->get<vector<string>>(common::kTest);
 
       if (device_ == c10::DeviceType::CUDA) {
          if (!torch::cuda::is_available()) {
@@ -85,7 +92,12 @@ namespace mikado::makeMore {
    //////////////////////////////////////////////////////////////////////////
    //
    MikadoErrorCode MakeMore::start() {
-      torchTest(bt::second_clock::local_time());
+      auto testName = testNames_.empty() ? "MulMat" : testNames_.front();
+      //for (auto testName : testNames_) {
+         if (boost::iequals(testName, "MulMat")) {
+            runTestMulMat(bt::second_clock::local_time());
+         }
+      //}
       return MikadoErrorCode::MKO_ERROR_NOT_IMPLEMENTED;
    }
 
@@ -130,6 +142,10 @@ namespace mikado::makeMore {
 
       auto makeMore = make_shared<MakeMore>();
       auto options = make_shared<common::Configure>(common::appIdMakeMore, "Mikado Makemore MLP", &*makeMore);
+      options->addOptions()
+         (common::kDevice.c_str(), po::value<string>(), "case-sensitive C10 device name, e.g. 'CPU', 'CUDA' (default), ...")
+         (common::kTest.c_str(), po::value<vector<string>>(), "run named internal tests, e.g. 'MulMat'")
+         ;
 
       // There is a typical sequence of processing options, that we do for all of the applications
       auto rc = options->defaultProcessing(argc, argv, MakeMore::outputBanner);
