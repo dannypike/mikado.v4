@@ -17,7 +17,7 @@ namespace mikado::common {
    // AppIds are used to identify the sending application in websocket messages
    extern std::string appIdBroker;
    extern std::string appIdGlobber;
-   extern std::string appIdMakeMore;
+   extern std::string appIdTorchBox;
    extern std::string appIdStorage;
 
    // String constants used in configuration files and command-line arguments

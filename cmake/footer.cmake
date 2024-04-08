@@ -13,5 +13,3 @@ if (${DUMP_VARIABLES}) # Set to FALSE to disable the following code
  
  message("")
  message("End of CMakeLists.txt for ${PROJECT_NAME}")
- message("####################################################")
- 

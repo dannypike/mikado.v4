@@ -1,20 +1,23 @@
 # Copyright (c) 2024 Gamaliel Ltd
 #
-# MakeMore is an MLP test application for libtorch
+# TorchBox is an test framebox for using libtorch to implement AI models
 #
 # 3.16 is required for target_precompile_headers(...PRECOMPILE_HEADERS_REUSE_FROM...)
 # 3.25 is required for CMAKE_C_COMPILE_OPTIONS_MSVC_DEBUG_INFORMATION_FORMAT
 cmake_minimum_required (VERSION 3.25)
 
+cmake_policy(SET CMP0141 NEW)  # Enable the CMAKE_MSVC_DEBUG_INFORMATION_FORMAT variable
+set(CMAKE_MSVC_DEBUG_INFORMATION_FORMAT "EditAndContinue")
+
 set(DUMP_VARIABLES FALSE)
-set(PROJECT_NAME MakeMore)
-set(TARGET makeMore)
+set(PROJECT_NAME TorchBox)
+set(TARGET torchBox)
 
 set(CMAKE_FOLDER ${CMAKE_CURRENT_SOURCE_DIR}/../cmake)
 include(${CMAKE_FOLDER}/header.cmake)
 
 set(SRC_FILES
-   "src/makeMore.cpp"
+   "src/torchBox.cpp"
 )
 
 # Define the target as an EXE
@@ -23,8 +26,6 @@ include(${CMAKE_FOLDER}/common-exe.cmake)
 if(TORCH_USE_VCPKG)
 
    message("Using vcpkg to locate the Torch files")
-   find_package(Torch CONFIG REQUIRED)
-   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${TORCH_CXX_FLAGS}")
    target_include_directories(${TARGET} PRIVATE "${TORCH_INCLUDE_DIRS}")
    target_link_libraries(${TARGET} PRIVATE "${TORCH_LIBRARIES}")
    
@@ -52,7 +53,7 @@ elseif(TORCH_USE_FIND_PACKAGE)
    target_include_directories(${TARGET} PRIVATE "${TORCH_INCLUDE_DIRS}")
    target_link_libraries(${TARGET} PRIVATE "${TORCH_LIBRARIES}")
 
-else()
+elseif(TORCH_USE_EXPLICIT)
 
    message("Linking to Torch files explicitly")
    include(${CMAKE_FOLDER}/torch-libraries.cmake)
@@ -61,3 +62,4 @@ endif()
 
 include(${CMAKE_FOLDER}/common-all.cmake)
 include(${CMAKE_FOLDER}/footer.cmake)
+dumpVariables()

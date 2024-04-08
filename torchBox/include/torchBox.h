@@ -1,19 +1,19 @@
 #pragma once
 // Copyright (c) 2024 Gamaliel Ltd
-#if !defined(MKO_MAKEMORE_H)
-#define MKO_MAKEMORE_H
+#if !defined(MKO_TORCHBOX_H)
+#define MKO_TORCHBOX_H
 
 #include "common/fyi.h"
 #include "common/globals.h"
 
-namespace mikado::makeMore {
+namespace mikado::torchBox {
 
-   unsigned int const MAKEMORE_VERSION_MAJOR = 0;
-   unsigned int const MAKEMORE_VERSION_MINOR = 1;
+   unsigned int const TORCHBOX_VERSION_MAJOR = 0;
+   unsigned int const TORCHBOX_VERSION_MINOR = 1;
 
-   class MakeMore : public std::enable_shared_from_this<MakeMore>, public common::BrokerFYI {
+   class TorchBox : public std::enable_shared_from_this<TorchBox>, public common::BrokerFYI {
    public:
-      MakeMore()
+      TorchBox()
       {
       }
       static void outputBanner();
@@ -32,6 +32,6 @@ namespace mikado::makeMore {
       std::vector<std::string> testNames_ { "MulMat" };
    };
     
-} // namespace mikado::makeMore
+} // namespace mikado::torchBox
 
-#endif // MKO_MAKEMORE_H
+#endif // MKO_TORCHBOX_H

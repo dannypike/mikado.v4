@@ -2,9 +2,8 @@
 
 #include "common.h"
 #include "windowsApi.h"
-#include <torch/torch.h>
-#include "makeMore.h"
-#include "makeMore/torch-enums.h"
+#include "torchBox.h"
+#include "torchBox/torch-enums.h"
 
 namespace api = mikado::windowsApi;
 namespace bt = boost::posix_time;
@@ -23,7 +22,7 @@ void forceMimalloc() {
    _forceMimalloc = mi_option_is_enabled(mi_option_eager_commit);
 }
 
-namespace mikado::makeMore {
+namespace mikado::torchBox {
    static MikadoErrorCode main(int argc, char *argv[]);
 
    //////////////////////////////////////////////////////////////////////////
@@ -43,15 +42,15 @@ namespace mikado::makeMore {
 
    //////////////////////////////////////////////////////////////////////////
    //
-   void MakeMore::outputBanner() {
-      str_notice() << "MakeMore version " << MAKEMORE_VERSION_MAJOR << "." << MAKEMORE_VERSION_MINOR
+   void TorchBox::outputBanner() {
+      str_notice() << "TorchBox version " << TORCHBOX_VERSION_MAJOR << "." << TORCHBOX_VERSION_MINOR
          << " (" << __DATE__ << " " << __TIME__ << ")" << endl;
       str_notice() << "Copyright (c) 2024 Gamaliel Ltd" << endl << endl;
    }
 
    //////////////////////////////////////////////////////////////////////////
    //
-   void MakeMore::runTestMulMat(bt::ptime startedAt) {
+   void TorchBox::runTestMulMat(bt::ptime startedAt) {
       torch::Tensor tensor;
       auto now = bt::second_clock::local_time();
       auto count = 16384;
@@ -76,7 +75,7 @@ namespace mikado::makeMore {
 
    //////////////////////////////////////////////////////////////////////////
    //
-   common::MikadoErrorCode MakeMore::configure(common::ConfigurePtr cfg) {
+   common::MikadoErrorCode TorchBox::configure(common::ConfigurePtr cfg) {
       string defaultName { enum_hpp::to_string(device_).value_or("cpu") };
       string deviceName = cfg->get<string>(common::kDevice, defaultName);
       string upperName(deviceName);
@@ -99,7 +98,7 @@ namespace mikado::makeMore {
 
    //////////////////////////////////////////////////////////////////////////
    //
-   MikadoErrorCode MakeMore::start() {
+   MikadoErrorCode TorchBox::start() {
       auto testName = testNames_.empty() ? "MulMat" : testNames_.front();
       for (auto testName : testNames_) {
          if (boost::iequals(testName, "MulMat")) {
@@ -111,13 +110,13 @@ namespace mikado::makeMore {
 
    //////////////////////////////////////////////////////////////////////////
    //
-   MikadoErrorCode MakeMore::stop() {
+   MikadoErrorCode TorchBox::stop() {
       return MikadoErrorCode::MKO_ERROR_NOT_IMPLEMENTED;
    }
 
    //////////////////////////////////////////////////////////////////////////
    //
-   void MakeMore::onBrokerMessage(common::WebSocketPtr broker
+   void TorchBox::onBrokerMessage(common::WebSocketPtr broker
       , ix::WebSocketMessagePtr const &msg) {
 
       broker_ = broker;
@@ -148,55 +147,55 @@ namespace mikado::makeMore {
    //
    static MikadoErrorCode main(int argc, char *argv[]) {
 
-      auto makeMore = make_shared<MakeMore>();
-      auto options = make_shared<common::Configure>(common::appIdMakeMore, "Mikado Makemore MLP", &*makeMore);
+      auto torchBox = make_shared<TorchBox>();
+      auto options = make_shared<common::Configure>(common::appIdTorchBox, "Mikado TorchBox", &*torchBox);
       options->addOptions()
          (common::kDevice.c_str(), po::value<string>(), "case-sensitive C10 device name, e.g. 'CPU', 'CUDA' (default), ...")
          (common::kTest.c_str(), po::value<vector<string>>(), "run named internal tests, e.g. 'MulMat'")
          ;
 
       // There is a typical sequence of processing options, that we do for all of the applications
-      auto rc = options->defaultProcessing(argc, argv, MakeMore::outputBanner);
+      auto rc = options->defaultProcessing(argc, argv, TorchBox::outputBanner);
       if (MikadoErrorCode::MKO_ERROR_MAXSTATUS < rc) { // May be an MKO_STATUS, so we don't use MKO_IS_ERROR() here
          // Already output a message
          return rc;
       }
 
       // Set up Ctrl-C/break handler, suppress stdout debug-logging and display the banner
-      windowsApi::apiSetupConsole(options, MakeMore::outputBanner);
+      windowsApi::apiSetupConsole(options, TorchBox::outputBanner);
 
-      if (auto rc = makeMore->configure(options); MKO_IS_ERROR(rc)) {
-         str_error() << "Failed to configure MakeMore - code: " << rc << endl;
+      if (auto rc = torchBox->configure(options); MKO_IS_ERROR(rc)) {
+         str_error() << "Failed to configure TorchBox - code: " << rc << endl;
          return rc;
       }
 
-      if (auto rc = makeMore->start(); MKO_IS_ERROR(rc)) {
-         str_error() << "Failed to start MakeMore - code: " << rc << endl;
+      if (auto rc = torchBox->start(); MKO_IS_ERROR(rc)) {
+         str_error() << "Failed to start TorchBox - code: " << rc << endl;
          return rc;
       }
 
       str_info() << "shutting down" << endl;
-      if (auto rc = makeMore->stop(); MKO_IS_ERROR(rc)) {
-         str_error() << "Failed to stop MakeMore - code: " << rc << endl;
+      if (auto rc = torchBox->stop(); MKO_IS_ERROR(rc)) {
+         str_error() << "Failed to stop TorchBox - code: " << rc << endl;
          return rc;
       }
 
       return rc;
    }
     
-} // namespace mikado::makeMore
+} // namespace mikado::torchBox
 
 //////////////////////////////////////////////////////////////////////////
 //
 int main(int argc, char *argv[]) {
-    if (auto rc = common::commonInitialize(argc, argv, mikado::makeMore::MakeMore::outputBanner); MKO_IS_ERROR(rc)) {
+    if (auto rc = common::commonInitialize(argc, argv, mikado::torchBox::TorchBox::outputBanner); MKO_IS_ERROR(rc)) {
         return (int)rc;
     }
     if (auto rc = windowsApi::apiInitialize(argc, argv); MKO_IS_ERROR(rc)) {
         return (int)rc;
     }
 
-    auto exitCode = (int)mikado::makeMore::main(argc, argv);
+    auto exitCode = (int)mikado::torchBox::main(argc, argv);
     assert(STATUS_PENDING != (int)exitCode);   // Not allowed to return 259 from any process in Windows, as it is reserved for the system.
     
     windowsApi::apiShutdown();

@@ -66,15 +66,18 @@ if(${TARGET} STREQUAL "common")
       # Database
       <sqlite3.h>
    )
-elseif(${TARGET} STREQUAL "makeMore")
-   # We need a separate-but-identical list for makeMore, because Torch is
-   # using different compiler switches (spefically the debug type)
-   target_precompile_headers(${TARGET} PRIVATE
-      ${PRECOMPILED_HEADER_FILES}
+elseif(${TARGET} STREQUAL "torchBox")
+   # The torch headers are large, so we put them into their own precompiled header
+   if(TORCH_USE_ANY)
+      target_precompile_headers(${TARGET} PRIVATE
+            ${PRECOMPILED_HEADER_FILES}
 
-      <torch/torch.h>
-      <torch/script.h>
-   )
+            <torch/torch.h>
+            <torch/script.h>
+         )
+   else()
+      target_precompile_headers(${TARGET} REUSE_FROM common)
+   endif(TORCH_USE_ANY)
 else()
    # Everything else uses the same precompiled file as common
    target_precompile_headers(${TARGET} REUSE_FROM common)
