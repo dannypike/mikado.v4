@@ -15,6 +15,9 @@ include(${CMAKE_FOLDER}/ixwebsocket.cmake)
 
 # Import the standard precompiled headers
 set(PRECOMPILED_HEADER_FILES
+	# Mimalloc is needed by libtorch and it needs to be first
+	<mimalloc.h>
+
    # Standard Library
    <cassert>
    <filesystem>
@@ -36,8 +39,8 @@ set(PRECOMPILED_HEADER_FILES
 	# IXWebsocket
    ${IXWEBSOCKET_INCLUDE_FILES}
 
-   # Database
-   <sqlite3.h>
+   # Google logging
+   <glog/logging.h>
 
    # Boost
    <boost/algorithm/string/predicate.hpp>
@@ -57,11 +60,21 @@ set(PRECOMPILED_HEADER_FILES
 )
 
 if(${TARGET} STREQUAL "common")
-   target_precompile_headers(${TARGET} PRIVATE ${PRECOMPILED_HEADER_FILES})
+   target_precompile_headers(${TARGET} PRIVATE
+      ${PRECOMPILED_HEADER_FILES}
+
+      # Database
+      <sqlite3.h>
+   )
 elseif(${TARGET} STREQUAL "makeMore")
    # We need a separate-but-identical list for makeMore, because Torch is
    # using different compiler switches (spefically the debug type)
-   target_precompile_headers(${TARGET} PRIVATE ${PRECOMPILED_HEADER_FILES})
+   target_precompile_headers(${TARGET} PRIVATE
+      ${PRECOMPILED_HEADER_FILES}
+
+      <torch/torch.h>
+      <torch/script.h>
+   )
 else()
    # Everything else uses the same precompiled file as common
    target_precompile_headers(${TARGET} REUSE_FROM common)
@@ -74,3 +87,6 @@ target_link_libraries(${TARGET} PRIVATE ${Boost_LIBRARIES})
 find_package(OpenSSL REQUIRED)
 target_link_libraries(${TARGET} PRIVATE ${OPENSSL_LIBRARIES})
 target_link_libraries(${TARGET} PRIVATE Crypt32 d3d9.lib)
+
+find_package(glog CONFIG REQUIRED)
+target_link_libraries(${TARGET} PRIVATE glog::glog)

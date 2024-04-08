@@ -19,16 +19,44 @@ set(SRC_FILES
 
 # Define the target as an EXE
 include(${CMAKE_FOLDER}/common-exe.cmake)
-if(TORCH_USE_FIND_PACKAGE)
+
+if(TORCH_USE_VCPKG)
+
+   message("Using vcpkg to locate the Torch files")
+   find_package(Torch CONFIG REQUIRED)
+   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${TORCH_CXX_FLAGS}")
+   target_include_directories(${TARGET} PRIVATE "${TORCH_INCLUDE_DIRS}")
+   target_link_libraries(${TARGET} PRIVATE "${TORCH_LIBRARIES}")
+   
+   # If the folder does not contain the CUDA files, then copy them over
+   if(NOT EXISTS ${EXECUTABLE_OUTPUT_PATH}/c10.dll)
+      message("Copying the CUDA SDK DLLs")
+      set(CUDA_SDK_SRC "D:/work/github/vcpkg/buildtrees/libtorch/x64-windows-dbg/bin")
+      file(GLOB CUDA_SDK_FILES "${CUDA_SDK_SRC}/*.dll" "${CUDA_SDK_SRC}/*.pdb")
+      #message("CUDA_SDK_FILES=${CUDA_SDK_FILES}")
+      foreach(II IN ITEMS ${CUDA_SDK_FILES})
+         get_filename_component(CUDA_SDK_FILE_NAME ${II} NAME)  
+         message("copying file ${II}")
+         configure_file(${II} ${EXECUTABLE_OUTPUT_PATH}/${CUDA_SDK_FILE_NAME} COPYONLY)
+      endforeach()
+   else()
+      message("will not copy the CUDA SDK DLLs - ${EXECUTABLE_OUTPUT_PATH}/c10.dll already exists")
+   endif()
+
+elseif(TORCH_USE_FIND_PACKAGE)
+
    message("Using find_package to locate the Torch files")
    set(Torch_DIR "E:/Projects/AI/Pytorch/cpp-2.21/cuda-dbg-11.8/libtorch/share/cmake/Torch")
    find_package(Torch REQUIRED)
    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${TORCH_CXX_FLAGS}")
    target_include_directories(${TARGET} PRIVATE "${TORCH_INCLUDE_DIRS}")
    target_link_libraries(${TARGET} PRIVATE "${TORCH_LIBRARIES}")
+
 else()
+
    message("Linking to Torch files explicitly")
    include(${CMAKE_FOLDER}/torch-libraries.cmake)
+
 endif()
 
 include(${CMAKE_FOLDER}/common-all.cmake)

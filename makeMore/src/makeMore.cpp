@@ -15,6 +15,14 @@ typedef common::MikadoErrorCode MikadoErrorCode;
 using namespace std;
 using namespace std::filesystem;
 
+///////////////////////////////////////////////////////////////////////
+// Force the linker to import mimalloc before anything else, so that it
+// can be used as the default allocator
+bool _forceMimalloc = false;
+void forceMimalloc() {
+   _forceMimalloc = mi_option_is_enabled(mi_option_eager_commit);
+}
+
 namespace mikado::makeMore {
    static MikadoErrorCode main(int argc, char *argv[]);
 
@@ -93,11 +101,11 @@ namespace mikado::makeMore {
    //
    MikadoErrorCode MakeMore::start() {
       auto testName = testNames_.empty() ? "MulMat" : testNames_.front();
-      //for (auto testName : testNames_) {
+      for (auto testName : testNames_) {
          if (boost::iequals(testName, "MulMat")) {
             runTestMulMat(bt::second_clock::local_time());
          }
-      //}
+      }
       return MikadoErrorCode::MKO_ERROR_NOT_IMPLEMENTED;
    }
 
