@@ -36,6 +36,8 @@ namespace mikado::common {
    string const kHelp{ "help" };
    string const kInclude{ "include" };
    string const kInstanceId{ "instanceId" };
+   string const kMakeMore{ "MakeMore" };
+   string const kMulMat{ "MulMat" };
    string const kRoot{ "root" };
    string const kStartApp{ "start-app" };
    string const kStartComspec{ "start-comspec" };

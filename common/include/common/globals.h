@@ -37,6 +37,8 @@ namespace mikado::common {
    extern std::string const kHelp;
    extern std::string const kInclude;
    extern std::string const kInstanceId;
+   extern std::string const kMakeMore;
+   extern std::string const kMulMat;
    extern std::string const kRoot;
    extern std::string const kStartApp;
    extern std::string const kStartComspec;

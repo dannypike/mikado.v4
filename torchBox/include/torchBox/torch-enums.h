@@ -1,7 +1,7 @@
 #pragma once
 // Copyright (c) 2024 Gamaliel Ltd
-#if !defined(MKO_TORCH_ENUMS_H)
-#define MKO_TORCH_ENUMS_H
+#if !defined(TBOX_TORCH_ENUMS_H)
+#define TBOX_TORCH_ENUMS_H
 
 #if !defined(ENUM_HPP_CLASS_DECL)
 #error "Please include the enum.hpp library from https://github.com/BlackMATov/enum.hpp/ before including this file"
@@ -39,4 +39,4 @@ namespace c10 {
 
 } // namespace c10
 
-#endif // MKO_TORCH_ENUMS_H
+#endif // TBOX_TORCH_ENUMS_H

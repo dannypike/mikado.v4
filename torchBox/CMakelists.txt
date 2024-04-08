@@ -18,6 +18,8 @@ include(${CMAKE_FOLDER}/header.cmake)
 
 set(SRC_FILES
    "src/torchBox.cpp"
+   "src/testMulMat.cpp"
+   "src/testMakeMore.cpp"
 )
 
 # Define the target as an EXE
@@ -62,4 +64,3 @@ endif()
 
 include(${CMAKE_FOLDER}/common-all.cmake)
 include(${CMAKE_FOLDER}/footer.cmake)
-dumpVariables()

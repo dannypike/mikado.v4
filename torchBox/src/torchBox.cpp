@@ -3,7 +3,8 @@
 #include "common.h"
 #include "windowsApi.h"
 #include "torchBox.h"
-#include "torchBox/torch-enums.h"
+#include "torchBox/testMakeMore.h"
+#include "torchBox/testMulMat.h"
 
 namespace api = mikado::windowsApi;
 namespace bt = boost::posix_time;
@@ -50,32 +51,9 @@ namespace mikado::torchBox {
 
    //////////////////////////////////////////////////////////////////////////
    //
-   void TorchBox::runTestMulMat(bt::ptime startedAt) {
-      torch::Tensor tensor;
-      auto now = bt::second_clock::local_time();
-      auto count = 16384;
-      auto dims = 1024;
-      str_notice() << "Running test 'MulMat' with " << count
-         << " iterations of a matrix [" << dims << "x" << dims
-         << "]" << endl;
-
-      for (auto ii = 0; ii < count; ++ii) {
-         torch::Tensor tensor1 = torch::rand({ dims, dims }, device_);
-         torch::Tensor tensor2 = torch::rand({ dims, dims }, device_);
-         tensor = torch::mm(tensor1, tensor2);
-      }
-      auto elapsed = bt::second_clock::local_time() - startedAt;
-
-      str_info() << "The product of the two tensors is loaded into '"
-         << enum_hpp::to_string(tensor.device().type()).value_or("???") << "':" << endl
-         << "The calculations took " << elapsed << " seconds." << endl
-         ; // << tensor << endl;
-
-   }
-
-   //////////////////////////////////////////////////////////////////////////
-   //
    common::MikadoErrorCode TorchBox::configure(common::ConfigurePtr cfg) {
+      cfg_ = cfg;
+
       string defaultName { enum_hpp::to_string(device_).value_or("cpu") };
       string deviceName = cfg->get<string>(common::kDevice, defaultName);
       string upperName(deviceName);
@@ -99,11 +77,17 @@ namespace mikado::torchBox {
    //////////////////////////////////////////////////////////////////////////
    //
    MikadoErrorCode TorchBox::start() {
-      auto testName = testNames_.empty() ? "MulMat" : testNames_.front();
       for (auto testName : testNames_) {
-         if (boost::iequals(testName, "MulMat")) {
-            runTestMulMat(bt::second_clock::local_time());
+         shared_ptr<TestBase> test;
+         if (boost::iequals(testName, common::kMulMat)) {
+            test = make_shared<TestMulMat>()->shared_from_this();
          }
+         else if (boost::iequals(testName, common::kMakeMore)) {
+            test = make_shared<TestMakeMore>();
+         }
+         test->setConfig(cfg_);
+         test->setDeviceType(device_);
+         test->run();
       }
       return MikadoErrorCode::MKO_ERROR_NOT_IMPLEMENTED;
    }
