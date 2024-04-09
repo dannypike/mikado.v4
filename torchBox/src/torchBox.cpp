@@ -23,6 +23,8 @@ void forceMimalloc() {
    _forceMimalloc = mi_option_is_enabled(mi_option_eager_commit);
 }
 
+///////////////////////////////////////////////////////////////////////
+//
 namespace mikado::torchBox {
    static MikadoErrorCode main(int argc, char *argv[]);
 
@@ -54,19 +56,20 @@ namespace mikado::torchBox {
    common::MikadoErrorCode TorchBox::configure(common::ConfigurePtr cfg) {
       cfg_ = cfg;
 
-      string defaultName { enum_hpp::to_string(device_).value_or("cpu") };
+      string defaultName { enum_hpp::to_string(c10Device_).value_or("cpu") };
       string deviceName = cfg->get<string>(common::kDevice, defaultName);
       string upperName(deviceName);
       boost::to_upper(upperName);
-      device_ = enum_hpp::from_string<c10::DeviceType>(upperName).value_or(c10::DeviceType::CPU);
+      c10Device_ = enum_hpp::from_string<c10::DeviceType>(upperName).value_or(c10::DeviceType::CPU);
+      torchDevice_ = (torch::TensorOptions)c10Device_;   // They are the same values
 
       testNames_ = cfg->get<vector<string>>(common::kTest);
 
-      if (device_ == c10::DeviceType::CUDA) {
+      if (c10Device_ == c10::DeviceType::CUDA) {
          if (!torch::cuda::is_available()) {
-            device_ = c10::DeviceType::CPU;
+            torchDevice_ = (torch::TensorOptions) (c10Device_ = c10::DeviceType::CPU);
             str_error() << deviceName << " is not available. Falling back to '"
-               << enum_hpp::to_string(device_).value_or("cpu") << "'";
+               << enum_hpp::to_string(c10Device_).value_or("cpu") << "'";
             return MikadoErrorCode::MKO_STATUS_FALLBACK_TO_DEFAULT;
          }
       }
@@ -86,7 +89,8 @@ namespace mikado::torchBox {
             test = make_shared<TestMakeMore>();
          }
          test->setConfig(cfg_);
-         test->setDeviceType(device_);
+         test->setC10Device(c10Device_);
+         test->setTorchDevice(torchDevice_);
          test->run();
       }
       return MikadoErrorCode::MKO_ERROR_NOT_IMPLEMENTED;
@@ -135,8 +139,11 @@ namespace mikado::torchBox {
       auto options = make_shared<common::Configure>(common::appIdTorchBox, "Mikado TorchBox", &*torchBox);
       options->addOptions()
          (common::kDevice.c_str(), po::value<string>(), "case-sensitive C10 device name, e.g. 'CPU', 'CUDA' (default), ...")
-         (common::kTest.c_str(), po::value<vector<string>>(), "run named internal tests, e.g. 'MulMat'")
+         (common::kTest.c_str(), po::value<vector<string>>(), "run named internal tests, e.g. 'MulMat', 'MakeMore'")
          ;
+
+      // Add the test options
+      TestMakeMore::addOptions(options);
 
       // There is a typical sequence of processing options, that we do for all of the applications
       auto rc = options->defaultProcessing(argc, argv, TorchBox::outputBanner);

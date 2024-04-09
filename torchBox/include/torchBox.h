@@ -28,7 +28,8 @@ namespace mikado::torchBox {
    private:
       common::ConfigurePtr cfg_;
       common::WebSocketPtr broker_;
-      c10::DeviceType device_ = c10::DeviceType::CUDA;   // Default to CUDA and fallback if not found
+      c10::DeviceType c10Device_ = c10::DeviceType::CUDA;   // Default to CUDA and fallback if not found
+      torch::TensorOptions torchDevice_ = torch::kCUDA;     // Same value as C10
       std::vector<std::string> testNames_ { common::kMulMat, common::kMakeMore };
    };
     

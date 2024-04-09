@@ -17,6 +17,7 @@ set(CMAKE_FOLDER ${CMAKE_CURRENT_SOURCE_DIR}/../cmake)
 include(${CMAKE_FOLDER}/header.cmake)
 
 set(SRC_FILES
+   "src/pytorch.cpp"
    "src/torchBox.cpp"
    "src/testMulMat.cpp"
    "src/testMakeMore.cpp"

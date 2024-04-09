@@ -14,12 +14,15 @@ namespace mikado::torchBox {
 
       void setConfig(common::ConfigurePtr cfg) { cfg_ = cfg; }
       common::ConfigurePtr getConfig() const { return cfg_; }
-      void setDeviceType(c10::DeviceType device) { device_ = device; }
-      c10::DeviceType getDeviceType() const { return device_; }
+      void setC10Device(c10::DeviceType c10device) { c10Device_ = c10device; }
+      c10::DeviceType getC10Device() const { return c10Device_; }
+      void setTorchDevice(torch::TensorOptions torchDevice) { torchDevice_ = torchDevice; }
+      torch::TensorOptions getTorchDevice() const { return torchDevice_; }
 
    private:
       common::ConfigurePtr cfg_;
-      c10::DeviceType device_ = c10::kCUDA;
+      c10::DeviceType c10Device_ = c10::kCUDA;
+      torch::TensorOptions torchDevice_ = torch::kCUDA;
    };
 
 } // namespace mikado::torchBox

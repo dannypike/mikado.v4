@@ -13,17 +13,25 @@ target_include_directories(${TARGET} PUBLIC
 # Include ixWebSocket stuff
 include(${CMAKE_FOLDER}/ixwebsocket.cmake)
 
+# Smart enum handling
+# This is the "smart" enum library from https://github.com/BlackMATov/enum.hpp/
+set(SMART_ENUMS_INCLUDE_FILES "$ENV{GITHUB_PUBLIC}/enum.hpp/headers/enum.hpp/enum.hpp")
+message("SMART_ENUMS_INCLUDE_FILES='${SMART_ENUMS_INCLUDE_FILES}'")
+
 # Import the standard precompiled headers
 set(PRECOMPILED_HEADER_FILES
 	# Mimalloc is needed by libtorch and it needs to be first
 	<mimalloc.h>
 
    # Standard Library
+   <algorithm>
    <cassert>
    <filesystem>
    <source_location>
+   <random>
    <string>
 	<thread>
+   <vector>
 
    # Windows API
    <winsock2.h>
@@ -38,6 +46,9 @@ set(PRECOMPILED_HEADER_FILES
 
 	# IXWebsocket
    ${IXWEBSOCKET_INCLUDE_FILES}
+
+   # Smart enums
+   ${SMART_ENUMS_INCLUDE_FILES}
 
    # Google logging
    <glog/logging.h>

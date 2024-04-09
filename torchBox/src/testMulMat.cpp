@@ -17,8 +17,8 @@ namespace mikado::torchBox {
          << "]" << endl;
 
       for (auto ii = 0; ii < count; ++ii) {
-         torch::Tensor tensor1 = torch::rand({ dims, dims }, getDeviceType());
-         torch::Tensor tensor2 = torch::rand({ dims, dims }, getDeviceType());
+         torch::Tensor tensor1 = torch::rand({ dims, dims }, getC10Device());
+         torch::Tensor tensor2 = torch::rand({ dims, dims }, getC10Device());
          tensor = torch::mm(tensor1, tensor2);
       }
       auto elapsed = bt::second_clock::local_time() - startedAt;
