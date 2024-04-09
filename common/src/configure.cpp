@@ -19,8 +19,8 @@ namespace mikado::common {
       // Add the options that are defined for all Mikado apps
       addOptions()
          (common::kAppId.c_str(), po::value<string>(), "the type of the application (broker, globber, storage etc)")
-         (common::kBrokerHost.c_str(), po::value<string>()->default_value("127.0.0.1"), "broker host")
-         (common::kBrokerPort.c_str(), po::value<int>()->default_value(22304), "broker port")
+         (common::kBrokerHost.c_str(), po::value<string>(), "broker host")
+         (common::kBrokerPort.c_str(), po::value<int>(), "broker port")
          (common::kBrokerTimeout.c_str(), po::value<unsigned>()->default_value(2), "broker timeout in seconds")
          (common::kConsoleQuiet.c_str(), po::value<bool>()->default_value(true), "suppress output to console")
          (common::kConsoleRestoreOnExit.c_str(), po::value<bool>()->default_value(false), "save and restore the title on exit")
@@ -145,11 +145,6 @@ namespace mikado::common {
    //
    MikadoErrorCode Configure::checkBroker() {
 
-      if (!brokerWS_) {
-         // We're not using the broker, so carry on with the configuration that we have
-         return MikadoErrorCode::MKO_ERROR_NONE;
-      }
-
       MikadoErrorCode status = MikadoErrorCode::MKO_STATUS_WAITING;
 
       // Save the broker settings, because we will be reinitializing the configuration
@@ -157,6 +152,15 @@ namespace mikado::common {
       brokerHost_ = get<string>("broker-host");
       brokerPort_ = get<int>("broker-port");
       brokerTimeout_ = get<unsigned>("broker-timeout");
+
+      if (brokerHost_.empty() || (0 == brokerPort_)) {
+         brokerWS_.reset();
+         str_info() << "Broker host and/or port not set in configuration" << endl;
+      }
+      if (!brokerWS_) {
+         // We're not using the broker, so carry on with the configuration that we have
+         return MikadoErrorCode::MKO_STATUS_NOBROKER;
+      }
 
       string url { "ws://" + get<string>("broker-host") + ":" + to_string(get<int>("broker-port")) };
       brokerWS_->setUrl(url);
@@ -237,6 +241,11 @@ namespace mikado::common {
                str_info() << "broker has responded, configuration updated" << endl;
                // We have received a new configuration from the broker
                return MikadoErrorCode::MKO_STATUS_BROKER_CONFIGURATION;
+            }
+            else if (MikadoErrorCode::MKO_STATUS_NOBROKER == rc) {
+               str_info() << "broker is not configured, using local configuration" << endl;
+               // We have received a new configuration from the broker
+               return MikadoErrorCode::MKO_STATUS_NOBROKER;
             }
          }
       }

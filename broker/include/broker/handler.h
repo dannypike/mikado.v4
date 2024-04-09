@@ -31,7 +31,7 @@ namespace mikado::broker {
       void onClose(ix::WebSocket &ws, ConnectionStatePtr state, ix::WebSocketMessagePtr const &msg);
 
    private:
-      int port_ = 22304;
+      int port_ = 0;
       std::string interface_ { "127.0.0.1" };
       WebSocketServerPtr server_;
    };

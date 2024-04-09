@@ -77,8 +77,8 @@ namespace mikado::common {
       OptionsPtr options_;
       VariablesPtr values_;
 
-      std::string brokerHost_ { "127.0.0.1" };
-      int brokerPort_ = 22304;
+      std::string brokerHost_;   // empty string means do not use the broker for config ...
+      int brokerPort_ = 0;       // .. same for port == 0
       unsigned brokerTimeout_ = 2;
       WebSocketPtr brokerWS_;
    };
