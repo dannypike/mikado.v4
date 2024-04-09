@@ -37,8 +37,10 @@ namespace mikado::common {
    string const kInclude{ "include" };
    string const kInstanceId{ "instanceId" };
    string const kMakeMore{ "MakeMore" };
-   string const kMakeMoreNamesFile { "makeMore-namesFile" };
    string const kMakeMoreContextSize { "makeMore-contextSize" };
+   string const kMakeMoreEmbeddingDim { "makeMore-embeddingDim" };
+   string const kMakeMoreHiddenLayer{ "makeMore-hiddenLayer" };
+   string const kMakeMoreNamesFile{ "makeMore-namesFile" };
    string const kMulMat{ "MulMat" };
    string const kRoot{ "root" };
    string const kStartApp{ "start-app" };

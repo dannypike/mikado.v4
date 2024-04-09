@@ -38,8 +38,10 @@ namespace mikado::common {
    extern std::string const kInclude;
    extern std::string const kInstanceId;
    extern std::string const kMakeMore;
-   extern std::string const kMakeMoreNamesFile;
    extern std::string const kMakeMoreContextSize;
+   extern std::string const kMakeMoreEmbeddingDim;
+   extern std::string const kMakeMoreHiddenLayer;
+   extern std::string const kMakeMoreNamesFile;
    extern std::string const kMulMat;
    extern std::string const kRoot;
    extern std::string const kStartApp;

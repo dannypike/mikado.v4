@@ -146,12 +146,80 @@ namespace mikado::torchBox {
 
    ///////////////////////////////////////////////////////////////////////////
    //
+   void TestMakeMore::buildLayers() {
+      try
+      {
+         // Number of dimensions in the embedding vector
+         embeddingDim_ = getConfig()->get<long>(kMakeMoreEmbeddingDim, embeddingDim_);
+
+         // Number of neurons in the hidden layer
+         hiddenLayer_ = getConfig()->get<long>(kMakeMoreHiddenLayer, hiddenLayer_);
+
+         // Create the embedding layer, e.g. 10 dimensions for each letter
+         auto options = torch::TensorOptions().dtype(torch::kFloat32).device(getC10Device());
+         C_ = torch::randn({ vocabSize(), embeddingDim_ }, options);
+         parameters_.push_back(&C_);
+
+         // Some "magic numbers" to fix problems with using only a simple random initialisation.
+         auto scaleW2 = 0.01;
+         auto scaleB2 = 0;
+
+         // Create the hidden layer, which has two dimensions :
+         // 1. Number of inputs = (number of characters in the embedding(block_size)) x(dim - size of each embedding)
+         // 2. The number of neurons in the hidden layer(user - configurable, as above)
+         //
+         // Use Kaiming He's initialization to set the weights to suitable values to prevent the tanh() activation saturating
+         W1_ = torch::zeros({ embeddingDim_ * contextSize_, hiddenLayer_ }, options);
+         parameters_.push_back(&W1_);
+         torch::nn::init::kaiming_normal_(W1_, 0, torch::kFanIn, torch::kTanh);
+
+         // Final layer
+         // The output has 'vocab_size' values, each of which will show a single probability
+         // Need to reduce the size of the weights to make sure that they are first values are near zero,
+         // and we don't have to spend iterations on "squashing". Dangerous to set it to zero (no entropy)
+         
+         // Set the seed to a fixed value (42), for reproducibility
+         auto optionsRng = torch::TensorOptions().dtype(torch::kFloat32);  // Need to use the CPU in CUDA11.8
+         torch::Generator rng = torch::make_generator<torch::CPUGeneratorImpl>(42);
+         W2_ = torch::randn({ hiddenLayer_, vocabSize() }, rng, optionsRng);
+         b2_ = torch::randn({ vocabSize() }, rng, optionsRng);
+         parameters_.push_back(&W2_);
+         parameters_.push_back(&b2_);
+
+         // Now we can move them to the CUDA device
+         if (auto device = getC10Device(); device != c10::DeviceType::CPU) {
+            W2_.to(device);
+            b2_.to(device);
+         }
+
+         // Batch normalisation gain and bias that will be used to normalise the hidden layer weights
+         // before applying the tanh() activation function
+         bnGain_ = torch::ones({ 1, hiddenLayer_ }, options);
+         parameters_.push_back(&bnGain_);
+         bnBias_ = torch::zeros({ 1, hiddenLayer_ }, options);
+         parameters_.push_back(&bnBias_);
+
+         // BN mean and std are estimated during training, so that they are available during inference(when there is only
+         // a single input, not a batch of them), e.g.when calling the split_loss() method. They're
+         // not used as trainable parameters, so they're not in the parameters_ list
+         bnMeanRunning_ = torch::zeros({ 1, hiddenLayer_ }, options);
+         bnStdRunning_ = torch::ones({ 1, hiddenLayer_ }, options);
+      }
+      catch (const std::exception &e)
+      {
+         log_exception(e);
+      }
+   }
+
+   ///////////////////////////////////////////////////////////////////////////
+   //
    void TestMakeMore::run() {
       auto startedAt = bt::second_clock::local_time();
       str_info() << "Running test 'MakeMore'" << endl;
 
       readNamesFile();
       makeTensors();
+      buildLayers();
 
       auto elapsed = bt::second_clock::local_time() - startedAt;
 

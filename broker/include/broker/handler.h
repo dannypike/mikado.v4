@@ -32,7 +32,7 @@ namespace mikado::broker {
 
    private:
       int port_ = 0;
-      std::string interface_ { "127.0.0.1" };
+      std::string interface_;
       WebSocketServerPtr server_;
    };
 
