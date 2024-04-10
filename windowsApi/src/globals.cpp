@@ -30,7 +30,7 @@ namespace mikado::windowsApi {
       string message(messageBuffer, size);
       LocalFree(messageBuffer);
 
-      message = common::trim(message) + "<" + to_string(errorCode) + ">";
+      message = common::trim(message, " \r\n\t.") + " [" + to_string(errorCode) + "]";
       return message;
    }
 
