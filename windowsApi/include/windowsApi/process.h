@@ -4,8 +4,8 @@
 #define API_WINDOWSPROCESS_H
 
 #include "common/errorCodes.h"
-#include "windowsHandle.h"
-#include "windowsPipe.h"
+#include "handle.h"
+#include "pipe.h"
 
 namespace mikado::windowsApi {
 

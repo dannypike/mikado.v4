@@ -1,6 +1,6 @@
 // Copyright (c) Gamaliel Ltd
 
-#include "windowsApi/WindowsHandle.h"
+#include "windowsApi/handle.h"
 
 using namespace std;
 

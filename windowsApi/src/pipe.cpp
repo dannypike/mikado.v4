@@ -2,7 +2,7 @@
 
 #include "common/errorCodes.h"
 #include "common/logger.h"
-#include "windowsApi/windowsPipe.h"
+#include "windowsApi/pipe.h"
 
 using namespace std;
 

@@ -5,11 +5,11 @@
 
 namespace mikado::windowsApi {}
 
-#include "windowsApi/windowsFileMonitor.h"
-#include "windowsApi/windowsGlobals.h"
-#include "windowsApi/windowsProcess.h"
-#include "windowsApi/windowsHandle.h"
-#include "windowsApi/windowsPipe.h"
+#include "windowsApi/fileMonitor.h"
+#include "windowsApi/globals.h"
+#include "windowsApi/process.h"
+#include "windowsApi/handle.h"
+#include "windowsApi/pipe.h"
 #include "windowsApi/stackTrace.h"
 
 #endif // MKO_WINDOWS_API_H

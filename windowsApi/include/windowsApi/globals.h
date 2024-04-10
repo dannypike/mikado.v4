@@ -14,6 +14,7 @@ namespace mikado::windowsApi {
    MikadoErrorCode apiInitialize(int argc, char *argv[]);
    MikadoErrorCode apiSetupConsole(common::ConfigurePtr options, std::function<void()> showBanner);
    void apiShutdown();
+   extern std::mutex DbgHelpMux;
 
 } // namespace mikado::windowsApi
 

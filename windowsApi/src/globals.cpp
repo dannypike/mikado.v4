@@ -1,8 +1,8 @@
 // Copyright (c) Gamaliel Ltd
 
 #include "common.h"
-#include "windowsApi/windowsGlobals.h"
-#include "windowsApi/windowsHandle.h"
+#include "windowsApi/globals.h"
+#include "windowsApi/handle.h"
 
 using namespace std;
 
@@ -13,6 +13,7 @@ namespace mikado::windowsApi {
    typedef common::MikadoErrorCode MikadoErrorCode;
 
    static string SaveConsoleTitle;
+   std::mutex DbgHelpMux;
 
    //////////////////////////////////////////////////////////////////////////
    //
@@ -36,7 +37,22 @@ namespace mikado::windowsApi {
    //////////////////////////////////////////////////////////////////////////
    //
    MikadoErrorCode apiInitialize(int argc, char *argv[]) {
+      // Initialize symbol handler used by the StackTrace class
+      SymSetOptions(SYMOPT_DEFERRED_LOADS | SYMOPT_LOAD_LINES);
+      SymInitialize(GetCurrentProcess(), NULL, TRUE);
       return MikadoErrorCode::MKO_ERROR_NONE;
+   }
+
+   ///////////////////////////////////////////////////////////////////////////
+   //
+   void apiShutdown() {
+      // Restore the console title
+      if (!SaveConsoleTitle.empty()) {
+         SetConsoleTitle(SaveConsoleTitle.c_str());
+      }
+
+      // Clean up symbol handler used by teh StackTrace class
+      SymCleanup(GetCurrentProcess());
    }
 
    //////////////////////////////////////////////////////////////////////////
@@ -97,15 +113,6 @@ namespace mikado::windowsApi {
       // Stop the program on Ctrl-C
       SetConsoleCtrlHandler(consoleCtrlHandler, TRUE);
       return MikadoErrorCode::MKO_ERROR_NONE;
-   }
-
-   ///////////////////////////////////////////////////////////////////////////
-   //
-   void apiShutdown() {
-      // Restore the console title
-      if (!SaveConsoleTitle.empty()) {
-         SetConsoleTitle(SaveConsoleTitle.c_str());
-      }
    }
 
 } // namespace mikado::windowsApi

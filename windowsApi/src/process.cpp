@@ -3,8 +3,8 @@
 #include "common/algorithms.h"
 #include "common/errorCodes.h"
 #include "common/logger.h"
-#include "windowsApi/windowsGlobals.h"
-#include "windowsApi/windowsProcess.h"
+#include "windowsApi/globals.h"
+#include "windowsApi/process.h"
 
 using namespace std;
 

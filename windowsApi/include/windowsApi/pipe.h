@@ -2,7 +2,7 @@
 #if !defined(API_WINDOWS_PIPE_H)
 #define API_WINDOWS_PIPE_H
 
-#include "windowsApi/windowsHandle.h"
+#include "windowsApi/handle.h"
 
 namespace mikado::windowsApi {
 

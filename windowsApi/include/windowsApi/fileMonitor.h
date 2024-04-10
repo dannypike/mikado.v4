@@ -5,7 +5,7 @@
 
 #include "common/errorCodes.h"
 #include "common/smart_enums.h"
-#include "windowsApi/WindowsHandle.h"
+#include "windowsApi/handle.h"
 
 namespace mikado::windowsApi {
 

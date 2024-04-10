@@ -14,11 +14,12 @@ set(CMAKE_FOLDER ${CMAKE_CURRENT_SOURCE_DIR}/../cmake)
 include(${CMAKE_FOLDER}/header.cmake)
 
 set(SRC_FILES
-   src/windowsFileMonitor.cpp
-   src/windowsGlobals.cpp
-   src/windowsHandle.cpp
-   src/windowsPipe.cpp
-   src/windowsProcess.cpp
+   src/fileMonitor.cpp
+   src/globals.cpp
+   src/handle.cpp
+   src/pipe.cpp
+   src/process.cpp
+   src/stackTrace.cpp
 )
 
 # Settings and switches for all Mikado projects

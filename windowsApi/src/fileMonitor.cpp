@@ -1,9 +1,9 @@
 // Copyright (c) Gamaliel Ltd
 
 #include "common.h"
-#include "windowsApi/windowsFileMonitor.h"
-#include "windowsApi/windowsGlobals.h"
-#include "windowsApi/windowsHandle.h"
+#include "windowsApi/fileMonitor.h"
+#include "windowsApi/globals.h"
+#include "windowsApi/handle.h"
 
 namespace json = boost::json;
 using namespace boost::tuples;
