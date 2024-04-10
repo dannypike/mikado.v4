@@ -5,8 +5,8 @@
 
 #include "common/smart_enums.h"
 
-#define MKO_IS_ERROR(code) (MikadoErrorCode::MKO_ERROR_MAXSTATUS < code)
-#define MKO_IS_OK(code) (MikadoErrorCode::MKO_ERROR_MAXSTATUS >= code)
+#define MKO_IS_ERROR(code) (MikadoErrorCode::MKO_ERROR_MAXSTATUS < (code))
+#define MKO_IS_OK(code) (MikadoErrorCode::MKO_ERROR_MAXSTATUS >= (code))
 
 namespace mikado::common {
 

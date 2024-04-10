@@ -26,11 +26,12 @@ namespace mikado::torchBox {
       char const kSeparator = '.';
 
 
-      void readNamesFile();
-      void makeTensors();
-      void buildDataset(WordIter fromWord, WordIter toWord
+      MikadoErrorCode readNamesFile();
+      MikadoErrorCode makeTensors();
+      MikadoErrorCode buildDataset(WordIter fromWord, WordIter toWord
          , std::vector<vocab_t> &xx, std::vector<vocab_t> &yy);
-      void buildLayers();
+      MikadoErrorCode buildLayers();
+      MikadoErrorCode reportLoss();
 
    private:
       std::map<char, vocab_t> stoi_;
@@ -56,17 +57,20 @@ namespace mikado::torchBox {
       // for updating them during training
       std::vector<torch::Tensor *> parameters_;
 
-      enum class TensorType : int {
-         kTrainX = 0,
-         kTrainY,
-         kDevelopX,
-         kDevelopY,
-         kTestX,
-         kTestY,
-         TensorTypeCount
-      };
+      ENUM_HPP_CLASS_DECL(Subset, int,
+         (kTrainX = 0)
+         (kTrainY)
+         (kDevelopX)
+         (kDevelopY)
+         (kTestX)
+         (kTestY)
+         (SubsetCount)
+      )
+      friend std::ostream &operator<<(std::ostream &os, Subset subset) {
+         return os << Subset_traits::to_underlying(subset);
+      }
 
-      torch::Tensor tensors_[(int)TensorType::TensorTypeCount];
+      torch::Tensor tensors_[(int)Subset::SubsetCount];
    };
 
 } // namespace mikado::torchBox
