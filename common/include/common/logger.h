@@ -34,8 +34,8 @@ namespace mikado::common {
 		std::ostream &streamNotice(std::source_location const &loc = std::source_location::current());
 		std::ostream &streamWarn(std::source_location const &loc = std::source_location::current());
 		std::ostream &streamError(std::source_location const &loc = std::source_location::current());
-		void logException(std::exception const &ex, std::source_location const &loc = std::source_location::current());
-		void logException(std::runtime_error const &ex, std::source_location const &loc = std::source_location::current());
+      std::ostream &logException(std::exception const &ex, std::source_location const &loc = std::source_location::current());
+      std::ostream &logException(std::runtime_error const &ex, std::source_location const &loc = std::source_location::current());
 
       void setOutputODS(bool value) {
          Redirector::setOutputODS(value);

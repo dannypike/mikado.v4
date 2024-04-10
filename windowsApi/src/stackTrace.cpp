@@ -47,7 +47,7 @@ namespace mikado::windowsApi {
             }
             auto lastError = GetLastError();
             ss << "no file/line number info @ call #" << frameCount - frameIndex
-               << "GetLastError() is '" << getLastErrorAsString(&lastError) << "'";
+               << "; GetLastError() is '" << getLastErrorAsString(&lastError) << "'";
             stack_.emplace_back(ss.str());
          }
       }

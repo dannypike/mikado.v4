@@ -1,6 +1,7 @@
 // Copyright (c) 2024 Gamaliel Ltd
 
-#include "common/logger.h"
+#include "common.h"
+#include "windowsApi.h"
 
 namespace bio = boost::iostreams;
 using namespace std;
@@ -79,18 +80,21 @@ namespace mikado::common {
 
    ///////////////////////////////////////////////////////////////////////
    //
-   void MikadoLog::logException(exception const &ex, source_location const &loc) {
-		static string logType("");
+   ostream &MikadoLog::logException(exception const &ex, source_location const &loc) {
+      string what(ex.what());
 		logHeader(clog, loc);
-		clog << "): <EXCEPTION>: " << ex.what() << endl;
+      return clog << "): <EXCEPTION>: " << common::trim(what)
+         << endl << windowsApi::StackTrace(3).toString(common::kSixSpaces);
 	}
 
    ///////////////////////////////////////////////////////////////////////
    //
-   void MikadoLog::logException(runtime_error const &ex, source_location const &loc) {
-		static string logType("");
+   ostream &MikadoLog::logException(runtime_error const &ex, source_location const &loc) {
+      string what(ex.what());
+      
 		logHeader(clog, loc);
-		clog << "): <RUNTIME ERROR>: " << ex.what() << endl;
+		return clog << "): <RUNTIME ERROR>: " << common::trim(what)
+         << endl << windowsApi::StackTrace(3).toString(common::kSixSpaces);
 	}
 
    ///////////////////////////////////////////////////////////////////////
