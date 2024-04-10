@@ -1,5 +1,5 @@
 #include "common.h"
-#include "torchBox/testMulMat.h"
+#include "torchBox/netMulMat.h"
 
 namespace bt = boost::posix_time;
 namespace common = mikado::common;
@@ -11,24 +11,24 @@ namespace mikado::torchBox {
 
    ///////////////////////////////////////////////////////////////////////////
    //
-   TestMulMat::TestMulMat()
-      : TestBase(common::kMulMat) {
+   NetMulMat::NetMulMat()
+      : NetBase(common::kMulMat) {
    }
 
    ///////////////////////////////////////////////////////////////////////////
    //
-   MikadoErrorCode TestMulMat::configure(common::ConfigurePtr cfg) {
+   MikadoErrorCode NetMulMat::configure(common::ConfigurePtr cfg) {
       return MikadoErrorCode::MKO_STATUS_NOOP;
    }
 
    ///////////////////////////////////////////////////////////////////////////
    //
-   MikadoErrorCode TestMulMat::train() {
+   MikadoErrorCode NetMulMat::train() {
       torch::Tensor tensor;
       auto startedAt = bt::second_clock::local_time();
       auto count = 16384;
       auto dims = 1024;
-      str_info() << "Running test 'MulMat' with " << count
+      str_info() << "training '" << getName() << "' with " << count
          << " iterations of a matrix [" << dims << "x" << dims
          << "]" << endl;
 

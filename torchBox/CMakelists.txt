@@ -1,6 +1,6 @@
 # Copyright (c) 2024 Gamaliel Ltd
 #
-# TorchBox is an test framebox for using libtorch to implement AI models
+# TorchBox is a framebox for using libtorch to implement AI models
 #
 # 3.16 is required for target_precompile_headers(...PRECOMPILE_HEADERS_REUSE_FROM...)
 # 3.25 is required for CMAKE_C_COMPILE_OPTIONS_MSVC_DEBUG_INFORMATION_FORMAT
@@ -19,9 +19,9 @@ include(${CMAKE_FOLDER}/header.cmake)
 set(SRC_FILES
    "src/pytorch.cpp"
    "src/torchBox.cpp"
-   "src/testBase.cpp"
-   "src/testMulMat.cpp"
-   "src/testMakeMore.cpp"
+   "src/netBase.cpp"
+   "src/netMulMat.cpp"
+   "src/netMakeMore.cpp"
 )
 
 # Define the target as an EXE

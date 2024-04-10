@@ -1,6 +1,6 @@
 #include "common.h"
 #include "torchBox/pytorch.h"
-#include "torchBox/testMakeMore.h"
+#include "torchBox/netMakeMore.h"
 
 namespace bt = boost::posix_time;
 namespace common = mikado::common;
@@ -12,13 +12,13 @@ namespace mikado::torchBox {
 
    ///////////////////////////////////////////////////////////////////////////
    //
-   TestMakeMore::TestMakeMore()
-      : TestBase(common::kMakeMore) {
+   NetMakeMore::NetMakeMore()
+      : NetBase(common::kMakeMore) {
    }
 
    ///////////////////////////////////////////////////////////////////////////
    //
-   void TestMakeMore::addOptions(ConfigurePtr cfg) {
+   void NetMakeMore::addOptions(ConfigurePtr cfg) {
       cfg->addOptions()
          (kMakeMoreNamesFile.c_str(), po::value<string>(), "A text file of names, one per line")
          ;
@@ -26,7 +26,7 @@ namespace mikado::torchBox {
 
    ///////////////////////////////////////////////////////////////////////////
    //
-   void TestMakeMore::readNamesFile() {
+   void NetMakeMore::readNamesFile() {
       // Build a map of char-to-index (stoi) and back again (itos)
       string name;
       size_t count = 0;
@@ -67,13 +67,13 @@ namespace mikado::torchBox {
 
    ///////////////////////////////////////////////////////////////////////////
    //
-   void TestMakeMore::makeTensors() {
+   void NetMakeMore::makeTensors() {
       try
       {
          auto contextSize = getConfig()->get<long>(kMakeMoreContextSize, contextSize_);
          int trainSize = 0.8 * names_.size();
          int developSize = 0.1 * names_.size();
-         int testSize = names_.size() - (trainSize + developSize);
+         //int datasetSize = names_.size() - (trainSize + developSize);
 
          torch::TensorOptions options{ dtype(torch::kInt64) };
 
@@ -115,7 +115,7 @@ namespace mikado::torchBox {
 
    ///////////////////////////////////////////////////////////////////////////
    //
-   void TestMakeMore::buildDataset(WordIter fromWord, WordIter toWord
+   void NetMakeMore::buildDataset(WordIter fromWord, WordIter toWord
          , vector<vocab_t> &xx, vector<vocab_t> &yy) {
 
       // The dataset is all of the possible sequences of letters that are in the names file, where each sequence
@@ -152,7 +152,7 @@ namespace mikado::torchBox {
 
    ///////////////////////////////////////////////////////////////////////////
    //
-   void TestMakeMore::buildLayers() {
+   void NetMakeMore::buildLayers() {
       try
       {
          // Number of dimensions in the embedding vector
@@ -219,7 +219,7 @@ namespace mikado::torchBox {
 
    ///////////////////////////////////////////////////////////////////////////
    //
-   MikadoErrorCode TestMakeMore::configure(common::ConfigurePtr cfg) {
+   MikadoErrorCode NetMakeMore::configure(common::ConfigurePtr cfg) {
       auto startedAt = bt::second_clock::local_time();
       str_info() << "configuring '" << common::kMakeMore << "'" << endl;
 
@@ -235,7 +235,7 @@ namespace mikado::torchBox {
 
    ///////////////////////////////////////////////////////////////////////////
    //
-   MikadoErrorCode TestMakeMore::train() {
+   MikadoErrorCode NetMakeMore::train() {
       auto startedAt = bt::second_clock::local_time();
       str_info() << "training '" << common::kMakeMore << "'" << endl;
 
@@ -247,7 +247,7 @@ namespace mikado::torchBox {
 
    ///////////////////////////////////////////////////////////////////////////
    //
-   MikadoErrorCode TestMakeMore::verify() {
+   MikadoErrorCode NetMakeMore::verify() {
       auto startedAt = bt::second_clock::local_time();
       str_info() << "verifying '" << common::kMakeMore << "'" << endl;
 

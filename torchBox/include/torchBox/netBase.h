@@ -1,7 +1,7 @@
 #pragma once
 // Copyright (c) 2024 Gamaliel Ltd
-#if !defined(TBOX_TESTBASE_H)
-#define TBOX_TESTBASE_H
+#if !defined(TBOX_NETBASE_H)
+#define TBOX_NETBASE_H
 
 #include "torchBase.h"
 
@@ -9,12 +9,12 @@ namespace mikado::torchBox {
 
    typedef common::MikadoErrorCode MikadoErrorCode;
 
-   class TestBase : public std::enable_shared_from_this<TestBase>, public TorchBase {
+   class NetBase : public std::enable_shared_from_this<NetBase>, public TorchBase {
    public:
-      TestBase(std::string const &testName);
+      NetBase(std::string const &name);
 
       virtual std::string const &getName() const {
-         return testName_;
+         return name_;
       }
 
       virtual MikadoErrorCode configure(common::ConfigurePtr cfg) {
@@ -28,10 +28,10 @@ namespace mikado::torchBox {
       }
 
    private:
-      std::string testName_;
+      std::string name_;
    };
-   typedef std::shared_ptr<TestBase> TestBasePtr;
+   typedef std::shared_ptr<NetBase> NetBasePtr;
 
 } // namespace mikado::torchBox
 
-#endif // TBOX_TESTBASE_H
+#endif // TBOX_NETBASE_H

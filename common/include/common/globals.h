@@ -42,13 +42,13 @@ namespace mikado::common {
    extern std::string const kMakeMoreEmbeddingDim;
    extern std::string const kMakeMoreHiddenLayer;
    extern std::string const kMakeMoreNamesFile;
+   extern std::string const kModel;
    extern std::string const kMulMat;
    extern std::string const kRoot;
    extern std::string const kStartApp;
    extern std::string const kStartComspec;
    extern std::string const kStartFolder;
    extern std::string const kStartRetry;
-   extern std::string const kTest;
    extern std::string const kWindowBroker;
 
    // fields are used in websocket messages

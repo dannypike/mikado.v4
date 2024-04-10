@@ -1,5 +1,5 @@
 #include "common.h"
-#include "torchBox/testBase.h"
+#include "torchBox/netBase.h"
 
 using namespace std;
 
@@ -9,8 +9,8 @@ namespace mikado::torchBox {
 
    ///////////////////////////////////////////////////////////////////////////
    //
-   TestBase::TestBase(string const &testName) {
-      testName_ = testName;
+   NetBase::NetBase(string const &name) {
+      name_ = name;
    }
 
 } // namespace mikado::torchBox

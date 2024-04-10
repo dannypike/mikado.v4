@@ -3,13 +3,13 @@
 #if !defined(TBOX_MULMAT_H)
 #define TBOX_MULMAT_H
 
-#include "testBase.h"
+#include "netBase.h"
 
 namespace mikado::torchBox {
 
-   class TestMulMat : public TestBase {
+   class NetMulMat : public NetBase {
    public:
-      TestMulMat();
+      NetMulMat();
 
       virtual MikadoErrorCode configure(common::ConfigurePtr cfg) override;
       virtual MikadoErrorCode train() override;

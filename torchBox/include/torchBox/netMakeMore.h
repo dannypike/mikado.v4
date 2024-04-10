@@ -3,15 +3,15 @@
 #if !defined(TBOX_MAKEMORE_H)
 #define TBOX_MAKEMORE_H
 
-#include "testBase.h"
+#include "netBase.h"
 
 namespace mikado::torchBox {
 
    typedef common::MikadoErrorCode MikadoErrorCode;
 
-   class TestMakeMore : public TestBase {
+   class NetMakeMore : public NetBase {
    public:
-      TestMakeMore();
+      NetMakeMore();
 
       static void addOptions(common::ConfigurePtr cfg);
       virtual MikadoErrorCode configure(common::ConfigurePtr cfg) override;

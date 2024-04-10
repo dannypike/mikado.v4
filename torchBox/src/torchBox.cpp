@@ -3,8 +3,8 @@
 #include "common.h"
 #include "windowsApi.h"
 #include "torchBox.h"
-#include "torchBox/testMakeMore.h"
-#include "torchBox/testMulMat.h"
+#include "torchBox/netMakeMore.h"
+#include "torchBox/netMulMat.h"
 
 namespace api = mikado::windowsApi;
 namespace bt = boost::posix_time;
@@ -63,7 +63,7 @@ namespace mikado::torchBox {
       c10Device_ = enum_hpp::from_string<c10::DeviceType>(upperName).value_or(c10::DeviceType::CPU);
       torchDevice_ = (torch::TensorOptions)c10Device_;   // They are the same values
 
-      testNames_ = cfg->get<vector<string>>(common::kTest);
+      netNames_ = cfg->get<vector<string>>(common::kModel);
 
       if (c10Device_ == c10::DeviceType::CUDA) {
          if (!torch::cuda::is_available()) {
@@ -76,22 +76,22 @@ namespace mikado::torchBox {
       str_info() << "using '" << deviceName << "'" << endl;
 
       auto rc = MikadoErrorCode::MKO_STATUS_NOOP;
-      for (auto testName : testNames_) {
-         shared_ptr<TestBase> test;
-         if (boost::iequals(testName, common::kMulMat)) {
-            test = make_shared<TestMulMat>()->shared_from_this();
+      for (auto netName : netNames_) {
+         shared_ptr<NetBase> network;
+         if (boost::iequals(netName, common::kMulMat)) {
+            network = make_shared<NetMulMat>()->shared_from_this();
          }
-         else if (boost::iequals(testName, common::kMakeMore)) {
-            test = make_shared<TestMakeMore>();
+         else if (boost::iequals(netName, common::kMakeMore)) {
+            network = make_shared<NetMakeMore>();
          }
-         test->setConfig(cfg_);
-         test->setC10Device(c10Device_);
-         test->setTorchDevice(torchDevice_);
+         network->setConfig(cfg_);
+         network->setC10Device(c10Device_);
+         network->setTorchDevice(torchDevice_);
 
-         if (rc = test->configure(cfg); MKO_IS_ERROR(rc)) {
+         if (rc = network->configure(cfg); MKO_IS_ERROR(rc)) {
             return rc;
          }
-         tests_.insert(make_pair(move(testName), test));
+         networks_.insert(make_pair(move(netName), network));
       }
       return rc;
    }
@@ -145,11 +145,11 @@ namespace mikado::torchBox {
       auto options = make_shared<common::Configure>(common::appIdTorchBox, "Mikado TorchBox", &*torchBox);
       options->addOptions()
          (common::kDevice.c_str(), po::value<string>(), "case-sensitive C10 device name, e.g. 'CPU', 'CUDA' (default), ...")
-         (common::kTest.c_str(), po::value<vector<string>>(), "run named internal tests, e.g. 'MulMat', 'MakeMore'")
+         (common::kModel.c_str(), po::value<vector<string>>(), "name of a model to run, e.g. 'MulMat', 'MakeMore'")
          ;
 
-      // Add the test options
-      TestMakeMore::addOptions(options);
+      // Add the network options
+      NetMakeMore::addOptions(options);
 
       // There is a typical sequence of processing options, that we do for all of the applications
       auto rc = options->defaultProcessing(argc, argv, TorchBox::outputBanner);
