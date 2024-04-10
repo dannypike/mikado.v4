@@ -1,7 +1,7 @@
 #pragma once
 // Copyright (c) 2024 Gamaliel Ltd
-#if !defined(MKO_WINDOWSAPI_H)
-#define MKO_WINDOWSAPI_H
+#if !defined(MKO_WINDOWS_API_H)
+#define MKO_WINDOWS_API_H
 
 namespace mikado::windowsApi {}
 
@@ -10,5 +10,6 @@ namespace mikado::windowsApi {}
 #include "windowsApi/windowsProcess.h"
 #include "windowsApi/windowsHandle.h"
 #include "windowsApi/windowsPipe.h"
+#include "windowsApi/stackTrace.h"
 
-#endif // MKO_WINDOWSAPI_H
+#endif // MKO_WINDOWS_API_H

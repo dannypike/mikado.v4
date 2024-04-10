@@ -38,6 +38,7 @@ set(PRECOMPILED_HEADER_FILES
 	"../include/windows-hack.h"	# undef's min and max
 	<wincrypt.h>
 	<d3d9.h>	# Direct3D #9
+   <dbghelp.h>
 
 	# OpenSSL
 	<openssl/bio.h>
@@ -100,7 +101,7 @@ target_link_libraries(${TARGET} PRIVATE ${Boost_LIBRARIES})
 
 find_package(OpenSSL REQUIRED)
 target_link_libraries(${TARGET} PRIVATE ${OPENSSL_LIBRARIES})
-target_link_libraries(${TARGET} PRIVATE Crypt32 d3d9.lib)
+target_link_libraries(${TARGET} PRIVATE Crypt32 d3d9.lib dbghelp.lib)
 
 find_package(glog CONFIG REQUIRED)
 target_link_libraries(${TARGET} PRIVATE glog::glog)

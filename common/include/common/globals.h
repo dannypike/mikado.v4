@@ -45,6 +45,7 @@ namespace mikado::common {
    extern std::string const kModel;
    extern std::string const kMulMat;
    extern std::string const kRoot;
+   extern std::string const kSixSpaces;
    extern std::string const kStartApp;
    extern std::string const kStartComspec;
    extern std::string const kStartFolder;

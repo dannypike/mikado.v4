@@ -44,6 +44,7 @@ namespace mikado::common {
    string const kModel{ "model" };
    string const kMulMat{ "MulMat" };
    string const kRoot{ "root" };
+   string const kSixSpaces{ "\x20\x20\x20\x20\x20\x20" };
    string const kStartApp{ "start-app" };
    string const kStartComspec{ "start-comspec" };
    string const kStartFolder{ "start-folder" };
