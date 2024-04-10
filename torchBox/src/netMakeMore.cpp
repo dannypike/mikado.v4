@@ -100,9 +100,7 @@ namespace mikado::torchBox {
          
          // Transfer them all to the CUDA device
          if (auto deviceType = getC10Device(); deviceType != c10::DeviceType::CPU) {
-            for (int ii = (int)TensorType::kTrainX; ii < (int)TensorType::TensorTypeCount; ++ii)
-            {
-               //!!! Do we need to assign the tensor to the return value of to(), when we move it?
+            for (int ii = (int)TensorType::kTrainX; ii < (int)TensorType::TensorTypeCount; ++ii) {
                tensors_[ii].to(deviceType);
             }
          }
