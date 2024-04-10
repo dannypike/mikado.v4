@@ -42,11 +42,11 @@ namespace mikado::common {
 
    ///////////////////////////////////////////////////////////////////////
    //
-   string trim(string const &str) {
+   string trim(string_view str, string_view unwanted) {
       string result;
-      string::size_type start = str.find_first_not_of(" \t");
+      string::size_type start = str.find_first_not_of(unwanted);
       if (start != string::npos) {
-         string::size_type end = str.find_last_not_of(" \t");
+         string::size_type end = str.find_last_not_of(unwanted);
          result = str.substr(start, end - start + 1);
       }
       return result;

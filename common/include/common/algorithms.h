@@ -3,6 +3,7 @@
 #if !defined(CMN_ALGORITHMS_H)
 #define CMN_ALGORITHMS_H
 
+#include "common/globals.h"
 #include "common/errorCodes.h"
 
 namespace mikado::common {
@@ -12,7 +13,7 @@ namespace mikado::common {
    std::string toLower(std::string const &str);
 
    std::string trim(boost::json::string const &str);
-   std::string trim(std::string const &str);
+   std::string trim(std::string_view str, std::string_view unwanted = common::kTrimDefaults);
 
    std::string toString(std::wstring const &str);
    std::wstring toString(std::string const &str);

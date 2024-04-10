@@ -52,6 +52,9 @@ namespace mikado::common {
    extern std::string const kStartRetry;
    extern std::string const kWindowBroker;
 
+   // Miscellaneous string constants
+   extern std::string const kTrimDefaults;
+
    // fields are used in websocket messages
    extern std::string fieldAction;
    extern std::string fieldAppId;
