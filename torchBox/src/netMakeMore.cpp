@@ -208,6 +208,15 @@ namespace mikado::torchBox {
          // not used as trainable parameters, so they're not in the parameters_ list
          bnMeanRunning_ = torch::zeros({ 1, hiddenLayer_ }, options);
          bnStdRunning_ = torch::ones({ 1, hiddenLayer_ }, options);
+
+         // All of the parameters are trainable
+         size_t count = 0;
+         for (auto parameter : parameters_) {
+            parameter->set_requires_grad(true);
+            count += parameter->numel();
+         }
+         parameterCount_ = count;
+         str_info() << "Total number of parameters: " << parameterCount_ << endl;
       }
       catch (const std::exception &e)
       {

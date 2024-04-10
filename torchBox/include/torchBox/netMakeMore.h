@@ -48,6 +48,7 @@ namespace mikado::torchBox {
       torch::Tensor bnMeanRunning_;
       torch::Tensor bnStdRunning_;
       double const epsilon_ = 1e-5;  // prevent DIV / 0 when dividing hpreact by the std
+      size_t parameterCount_ = 0;
 
       // Holds a collection of references to the above parameters of the model
       // for updating them during training
