@@ -23,6 +23,8 @@ namespace mikado::torchBox {
    protected:
       typedef std::vector<std::string>::const_iterator WordIter;
       typedef int64_t vocab_t;   // Standard integer type for tensors
+      char const kSeparator = '.';
+
 
       void readNamesFile();
       void makeTensors();

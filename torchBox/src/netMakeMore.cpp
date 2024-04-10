@@ -31,6 +31,10 @@ namespace mikado::torchBox {
       string name;
       size_t count = 0;
 
+      // The separator has the "special" index 0 to make it easy to spot
+      stoi_.insert(make_pair(kSeparator, 0));
+      itos_.push_back(kSeparator);
+
       totalLength_ = 0;
       auto filename = lexicalPath(getConfig()->get<string>(kMakeMoreNamesFile));
       if (ifstream ifs(filename); ifs.is_open()) {
@@ -39,7 +43,7 @@ namespace mikado::torchBox {
             getline(ifs, name);
             if (!name.empty()) {
                ++count;
-               totalLength_ += name.size() + 1; // Include the '.' separator
+               totalLength_ += name.size() + 1; // Include the '.' separator in the length calculation
 
                // Create the tokens for each letter in the name
                for (auto cc : name) {
@@ -122,7 +126,7 @@ namespace mikado::torchBox {
       try
       {
          while (fromWord < toWord) {
-            string letterSequence = *fromWord++ + ".";    // Using a '.' to pad out the context when there are no more letters
+            string letterSequence = *fromWord++ + kSeparator;    // Using a '.' to pad out the context when there are no more letters
 
             vector<vocab_t> context;
             vector<vocab_t> embedding = { 0 };
@@ -210,13 +214,15 @@ namespace mikado::torchBox {
          bnStdRunning_ = torch::ones({ 1, hiddenLayer_ }, options);
 
          // All of the parameters are trainable
-         size_t count = 0;
+         size_t index = 0, count = 0;
          for (auto parameter : parameters_) {
             parameter->set_requires_grad(true);
+            str_debug() << "# " << index++ << " : " << getShape(*parameter) << " = "
+               << parameter->numel() << endl;
             count += parameter->numel();
          }
          parameterCount_ = count;
-         str_info() << "Total number of parameters: " << parameterCount_ << endl;
+         str_info() << "total number of parameters: " << parameterCount_ << endl;
       }
       catch (const std::exception &e)
       {
