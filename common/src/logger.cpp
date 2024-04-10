@@ -82,17 +82,17 @@ namespace mikado::common {
    //
    ostream &MikadoLog::logException(exception const &ex, source_location const &loc) {
       string what(ex.what());
-		logHeader(clog, loc);
+      logHeader(clog, loc);
       return clog << "): <EXCEPTION>: " << common::trim(what)
          << endl << windowsApi::StackTrace(3).toString(common::kSixSpaces);
-	}
+   }
 
    ///////////////////////////////////////////////////////////////////////
    //
    ostream &MikadoLog::logException(runtime_error const &ex, source_location const &loc) {
       string what(ex.what());
       
-		logHeader(clog, loc);
+      logHeader(clog, loc);
 		return clog << "): <RUNTIME ERROR>: " << common::trim(what)
          << endl << windowsApi::StackTrace(3).toString(common::kSixSpaces);
 	}
