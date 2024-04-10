@@ -40,10 +40,11 @@ namespace mikado::torchBox {
       }
       auto elapsed = bt::second_clock::local_time() - startedAt;
 
+      auto deviceType = tensor.device().type();
       str_info() << "The product of the two tensors is loaded into '"
-         << enum_hpp::to_string(tensor.device().type()).value_or("???") << "':" << endl
-         << "The calculations took " << elapsed << " seconds." << endl
-         ; // << tensor << endl;
+         << enum_hpp::to_string(deviceType).value_or<std::string>(common::unknownEnumAsString((int)deviceType))
+         << "':" << endl
+         << "The calculations took " << elapsed << " seconds." << endl; // << tensor << endl;
       return MikadoErrorCode::MKO_ERROR_NONE;
    }
 

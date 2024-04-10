@@ -1,11 +1,12 @@
 #include "common.h"
+#include "windowsApi.h"
 #include "torchBox/pytorch.h"
 #include "torchBox/netMakeMore.h"
 
 namespace bt = boost::posix_time;
 namespace common = mikado::common;
 namespace po = boost::program_options;
-using namespace common;
+namespace windowsApi = mikado::windowsApi;
 using namespace std;
 
 namespace mikado::torchBox {
@@ -18,9 +19,9 @@ namespace mikado::torchBox {
 
    ///////////////////////////////////////////////////////////////////////////
    //
-   void NetMakeMore::addOptions(ConfigurePtr cfg) {
+   void NetMakeMore::addOptions(common::ConfigurePtr cfg) {
       cfg->addOptions()
-         (kMakeMoreNamesFile.c_str(), po::value<string>(), "A text file of names, one per line")
+         (common::kMakeMoreNamesFile.c_str(), po::value<string>(), "A text file of names, one per line")
          ;
    }
 
@@ -36,7 +37,7 @@ namespace mikado::torchBox {
       itos_.push_back(kSeparator);
 
       totalLength_ = 0;
-      auto filename = lexicalPath(getConfig()->get<string>(kMakeMoreNamesFile));
+      auto filename = common::lexicalPath(getConfig()->get<string>(common::kMakeMoreNamesFile));
       ifstream ifs(filename); 
       if (!ifs.is_open()) {
          str_error() << "Failed to open names file: '" << filename << "'" << endl;
@@ -76,12 +77,10 @@ namespace mikado::torchBox {
    MikadoErrorCode NetMakeMore::makeTensors() {
       try
       {
-         auto contextSize = getConfig()->get<long>(kMakeMoreContextSize, contextSize_);
+         auto contextSize = getConfig()->get<long>(common::kMakeMoreContextSize, contextSize_);
          int trainSize = 0.8 * names_.size();
          int developSize = 0.1 * names_.size();
          //int datasetSize = names_.size() - (trainSize + developSize);
-
-         torch::TensorOptions options{ dtype(torch::kInt64) };
 
          // We will build the tensor from two arrays of "vocab_t" integers (embedding indices)
          // and then convert them to tensors
@@ -90,24 +89,29 @@ namespace mikado::torchBox {
          yy.reserve(totalLength_);
 
          buildDataset(names_.begin(), names_.begin() + trainSize, xx, yy);
-         tensors_[(int)Subset::kTrainX] = torch::from_blob(xx.data(), { (vocab_t)totalLength_, contextSize }, options);
-         tensors_[(int)Subset::kTrainY] = torch::from_blob(yy.data(), { (vocab_t)totalLength_ }, options);
-         //str_info() << "X = " << getShape(tensors_[(int)Subset::kTrainX]) << endl;
-         //str_info() << "Y = " << getShape(tensors_[(int)Subset::kTrainY]) << endl;
+
+         // Create the tensors from the arrays on the CPU and then move them to the CUDA device afterwards
+         torch::TensorOptions options{ dtype(torch::kInt64) };
+         tensors_[(int)Subset::TrainX] = torch::from_blob(xx.data(), { (vocab_t)totalLength_, contextSize }, options);
+         tensors_[(int)Subset::TrainX] = torch::from_blob(xx.data(), { (vocab_t)totalLength_, contextSize }, options);
+         tensors_[(int)Subset::TrainY] = torch::from_blob(yy.data(), { (vocab_t)totalLength_ }, options);
+         //str_info() << "X = " << getShape(tensors_[(int)Subset::TrainX]) << endl;
+         //str_info() << "Y = " << getShape(tensors_[(int)Subset::TrainY]) << endl;
 
          buildDataset(names_.begin() + trainSize, names_.begin() + trainSize + developSize
             , xx, yy);
-         tensors_[(int)Subset::kDevelopX] = torch::from_blob(xx.data(), { (vocab_t)totalLength_, contextSize }, options);
-         tensors_[(int)Subset::kDevelopY] = torch::from_blob(yy.data(), { (vocab_t)totalLength_ }, options);
+         tensors_[(int)Subset::DevelopX] = torch::from_blob(xx.data(), { (vocab_t)totalLength_, contextSize }, options);
+         tensors_[(int)Subset::DevelopY] = torch::from_blob(yy.data(), { (vocab_t)totalLength_ }, options);
          
          buildDataset(names_.begin() + trainSize + developSize, names_.end(), xx, yy);
-         tensors_[(int)Subset::kTestX] = torch::from_blob(xx.data(), { (vocab_t)totalLength_, contextSize }, options);
-         tensors_[(int)Subset::kTestY] = torch::from_blob(yy.data(), { (vocab_t)totalLength_ }, options);
+         tensors_[(int)Subset::TestX] = torch::from_blob(xx.data(), { (vocab_t)totalLength_, contextSize }, options);
+         tensors_[(int)Subset::TestY] = torch::from_blob(yy.data(), { (vocab_t)totalLength_ }, options);
          
          // Transfer them all to the CUDA device
          if (auto deviceType = getC10Device(); deviceType != c10::DeviceType::CPU) {
-            for (int ii = (int)Subset_traits::to_underlying(Subset::kTrainX); ii < (int)Subset::SubsetCount; ++ii) {
-               tensors_[ii].to(deviceType);
+            for (int ii = (int)Subset_traits::to_underlying(Subset::TrainX); ii < (int)Subset::SubsetCount; ++ii) {
+               tensors_[ii] = tensors_[ii].to(deviceType);
+               str_info() << "tensor[" << (Subset)ii << "] is at " << tensors_[ii].device() << endl; 
             }
          }
       }
@@ -130,7 +134,7 @@ namespace mikado::torchBox {
       try
       {
          while (fromWord < toWord) {
-            string letterSequence = *fromWord++ + kSeparator;    // Using a '.' to pad out the context when there are no more letters
+            string letterSequence = *fromWord++ + kSeparator;    // Using a '.' to pad ss the context when there are no more letters
 
             vector<vocab_t> context;
             vector<vocab_t> embedding = { 0 };
@@ -164,10 +168,10 @@ namespace mikado::torchBox {
       try
       {
          // Number of dimensions in the embedding vector
-         embeddingDim_ = getConfig()->get<long>(kMakeMoreEmbeddingDim, embeddingDim_);
+         embeddingDim_ = getConfig()->get<long>(common::kMakeMoreEmbeddingDim, embeddingDim_);
 
          // Number of neurons in the hidden layer
-         hiddenLayer_ = getConfig()->get<long>(kMakeMoreHiddenLayer, hiddenLayer_);
+         hiddenLayer_ = getConfig()->get<long>(common::kMakeMoreHiddenLayer, hiddenLayer_);
 
          // Create the embedding layer, e.g. 10 dimensions for each letter
          auto options = torch::TensorOptions().dtype(torch::kFloat32).device(getC10Device());
@@ -240,10 +244,18 @@ namespace mikado::torchBox {
 
    ///////////////////////////////////////////////////////////////////////////
    //
-   MikadoErrorCode NetMakeMore::reportLoss() {
+   MikadoErrorCode NetMakeMore::reportLoss(Subset subsetX, Subset subsetY) {
       try
       {
-         
+         auto &x = tensors_[(int)subsetX];
+         auto &y = tensors_[(int)subsetY];
+         str_debug() << "x[" << subsetX << "] at " << x.device() << endl;
+         str_debug() << "y[" << subsetY << "] at " << y.device() << endl;
+         str_debug() << "C at " << C_.device() << endl;
+         auto embedding = torch::embedding(C_, x);
+         str_debug() << "embedding = " << getShape(embedding) << endl;
+
+         // DO THIS NEXT
       }
       catch (const std::exception &e)
       {
@@ -263,7 +275,8 @@ namespace mikado::torchBox {
       if (MKO_IS_ERROR(rc = readNamesFile())
          || MKO_IS_ERROR(rc = makeTensors())
          || MKO_IS_ERROR(rc = buildLayers())
-         || MKO_IS_ERROR(rc = reportLoss())
+         || MKO_IS_ERROR(rc = reportLoss(Subset::TrainX, Subset::TrainY))
+         || MKO_IS_ERROR(rc = reportLoss(Subset::DevelopX, Subset::DevelopY))
          ) {
          return rc;
       }

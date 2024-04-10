@@ -3,6 +3,7 @@
 #if !defined(TBOX_MAKEMORE_H)
 #define TBOX_MAKEMORE_H
 
+#include "torchBox/subsetEnum.h"
 #include "netBase.h"
 
 namespace mikado::torchBox {
@@ -31,7 +32,7 @@ namespace mikado::torchBox {
       MikadoErrorCode buildDataset(WordIter fromWord, WordIter toWord
          , std::vector<vocab_t> &xx, std::vector<vocab_t> &yy);
       MikadoErrorCode buildLayers();
-      MikadoErrorCode reportLoss();
+      MikadoErrorCode reportLoss(Subset subsetX, Subset subsetY);
 
    private:
       std::map<char, vocab_t> stoi_;
@@ -56,19 +57,6 @@ namespace mikado::torchBox {
       // Holds a collection of references to the above parameters of the model
       // for updating them during training
       std::vector<torch::Tensor *> parameters_;
-
-      ENUM_HPP_CLASS_DECL(Subset, int,
-         (kTrainX = 0)
-         (kTrainY)
-         (kDevelopX)
-         (kDevelopY)
-         (kTestX)
-         (kTestY)
-         (SubsetCount)
-      )
-      friend std::ostream &operator<<(std::ostream &os, Subset subset) {
-         return os << Subset_traits::to_underlying(subset);
-      }
 
       torch::Tensor tensors_[(int)Subset::SubsetCount];
    };
