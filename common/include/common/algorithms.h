@@ -17,6 +17,8 @@ namespace mikado::common {
 
    std::string toString(std::wstring const &str);
    std::wstring toString(std::string const &str);
+
+   std::string unknownEnumAsString(int enumValue);
    
    char const *toString(std::string &scratch, char const *format, ...);
    char const *toString(std::string &scratch, boost::posix_time::ptime const &time);

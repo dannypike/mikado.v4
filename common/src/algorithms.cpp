@@ -66,6 +66,14 @@ namespace mikado::common {
 
    ///////////////////////////////////////////////////////////////////////
    //
+   string unknownEnumAsString(int enumValue) {
+      ostringstream ss;
+      ss << "???<" << enumValue << ">";
+      return ss.str();
+   }
+
+   ///////////////////////////////////////////////////////////////////////
+   //
    char const *toString(string &scratch, char const *format, ...)
    {
       va_list ap;
