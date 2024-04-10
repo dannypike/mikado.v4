@@ -7,7 +7,23 @@ using namespace std;
 
 namespace mikado::torchBox {
 
-   void TestMulMat::run() {
+   typedef common::MikadoErrorCode MikadoErrorCode;
+
+   ///////////////////////////////////////////////////////////////////////////
+   //
+   TestMulMat::TestMulMat()
+      : TestBase(common::kMulMat) {
+   }
+
+   ///////////////////////////////////////////////////////////////////////////
+   //
+   MikadoErrorCode TestMulMat::configure(common::ConfigurePtr cfg) {
+      return MikadoErrorCode::MKO_STATUS_NOOP;
+   }
+
+   ///////////////////////////////////////////////////////////////////////////
+   //
+   MikadoErrorCode TestMulMat::train() {
       torch::Tensor tensor;
       auto startedAt = bt::second_clock::local_time();
       auto count = 16384;
@@ -16,9 +32,10 @@ namespace mikado::torchBox {
          << " iterations of a matrix [" << dims << "x" << dims
          << "]" << endl;
 
+      auto device = getC10Device();
       for (auto ii = 0; ii < count; ++ii) {
-         torch::Tensor tensor1 = torch::rand({ dims, dims }, getC10Device());
-         torch::Tensor tensor2 = torch::rand({ dims, dims }, getC10Device());
+         torch::Tensor tensor1 = torch::rand({ dims, dims }, device);
+         torch::Tensor tensor2 = torch::rand({ dims, dims }, device);
          tensor = torch::mm(tensor1, tensor2);
       }
       auto elapsed = bt::second_clock::local_time() - startedAt;
@@ -27,6 +44,7 @@ namespace mikado::torchBox {
          << enum_hpp::to_string(tensor.device().type()).value_or("???") << "':" << endl
          << "The calculations took " << elapsed << " seconds." << endl
          ; // << tensor << endl;
+      return MikadoErrorCode::MKO_ERROR_NONE;
    }
 
 } // namespace mikado::torchBox

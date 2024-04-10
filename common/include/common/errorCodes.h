@@ -62,6 +62,7 @@ namespace mikado::common {
       (MKO_ERROR_APP_CONFIGURE = 129)
       (MKO_ERROR_APP_COMSPEC = 130)
       (MKO_ERROR_TORCH = 131)
+      (MKO_ERROR_TEST_NOT_FOUND = 132)
       )
 
    std::ostream &operator<<(std::ostream &os, enum MikadoErrorCode code);

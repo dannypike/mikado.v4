@@ -12,6 +12,12 @@ namespace mikado::torchBox {
 
    ///////////////////////////////////////////////////////////////////////////
    //
+   TestMakeMore::TestMakeMore()
+      : TestBase(common::kMakeMore) {
+   }
+
+   ///////////////////////////////////////////////////////////////////////////
+   //
    void TestMakeMore::addOptions(ConfigurePtr cfg) {
       cfg->addOptions()
          (kMakeMoreNamesFile.c_str(), po::value<string>(), "A text file of names, one per line")
@@ -28,7 +34,7 @@ namespace mikado::torchBox {
       totalLength_ = 0;
       auto filename = lexicalPath(getConfig()->get<string>(kMakeMoreNamesFile));
       if (ifstream ifs(filename); ifs.is_open()) {
-         str_info() << "Reading names from " << filename << endl;
+         str_info() << "reading names from " << filename << endl;
          while (ifs) {
             getline(ifs, name);
             if (!name.empty()) {
@@ -213,17 +219,42 @@ namespace mikado::torchBox {
 
    ///////////////////////////////////////////////////////////////////////////
    //
-   void TestMakeMore::run() {
+   MikadoErrorCode TestMakeMore::configure(common::ConfigurePtr cfg) {
       auto startedAt = bt::second_clock::local_time();
-      str_info() << "Running test 'MakeMore'" << endl;
+      str_info() << "configuring '" << common::kMakeMore << "'" << endl;
 
       readNamesFile();
       makeTensors();
       buildLayers();
 
       auto elapsed = bt::second_clock::local_time() - startedAt;
+      str_info() << "configuring '" << common::kMakeMore << "' took "
+         << elapsed << " seconds." << endl;
+      return MikadoErrorCode::MKO_ERROR_NONE;
+   }
 
-      str_info() << "MakeMore took " << elapsed << " seconds." << endl;
+   ///////////////////////////////////////////////////////////////////////////
+   //
+   MikadoErrorCode TestMakeMore::train() {
+      auto startedAt = bt::second_clock::local_time();
+      str_info() << "training '" << common::kMakeMore << "'" << endl;
+
+      auto elapsed = bt::second_clock::local_time() - startedAt;
+      str_info() << "training '" << common::kMakeMore << "' took "
+         << elapsed << " seconds." << endl;
+      return MikadoErrorCode::MKO_ERROR_NONE;
+   }
+
+   ///////////////////////////////////////////////////////////////////////////
+   //
+   MikadoErrorCode TestMakeMore::verify() {
+      auto startedAt = bt::second_clock::local_time();
+      str_info() << "verifying '" << common::kMakeMore << "'" << endl;
+
+      auto elapsed = bt::second_clock::local_time() - startedAt;
+      str_info() << "verifying '" << common::kMakeMore << "' took "
+         << elapsed << " seconds." << endl;
+      return MikadoErrorCode::MKO_ERROR_NONE;
    }
 
 } // namespace mikado::torchBox

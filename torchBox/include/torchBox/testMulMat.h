@@ -9,9 +9,10 @@ namespace mikado::torchBox {
 
    class TestMulMat : public TestBase {
    public:
-      TestMulMat() = default;
+      TestMulMat();
 
-      virtual void run() override;
+      virtual MikadoErrorCode configure(common::ConfigurePtr cfg) override;
+      virtual MikadoErrorCode train() override;
    };
 
 } // namespace mikado::torchBox

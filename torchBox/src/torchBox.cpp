@@ -73,13 +73,9 @@ namespace mikado::torchBox {
             return MikadoErrorCode::MKO_STATUS_FALLBACK_TO_DEFAULT;
          }
       }
-      str_info() << "Using '" << deviceName << "'." << endl;
-      return MikadoErrorCode::MKO_ERROR_NONE;
-   }
+      str_info() << "using '" << deviceName << "'" << endl;
 
-   //////////////////////////////////////////////////////////////////////////
-   //
-   MikadoErrorCode TorchBox::start() {
+      auto rc = MikadoErrorCode::MKO_STATUS_NOOP;
       for (auto testName : testNames_) {
          shared_ptr<TestBase> test;
          if (boost::iequals(testName, common::kMulMat)) {
@@ -91,14 +87,24 @@ namespace mikado::torchBox {
          test->setConfig(cfg_);
          test->setC10Device(c10Device_);
          test->setTorchDevice(torchDevice_);
-         test->run();
+
+         if (rc = test->configure(cfg); MKO_IS_ERROR(rc)) {
+            return rc;
+         }
+         tests_.insert(make_pair(move(testName), test));
       }
-      return MikadoErrorCode::MKO_ERROR_NOT_IMPLEMENTED;
+      return rc;
    }
 
    //////////////////////////////////////////////////////////////////////////
    //
-   MikadoErrorCode TorchBox::stop() {
+   MikadoErrorCode TorchBox::verify() {
+      return MikadoErrorCode::MKO_STATUS_NOOP;
+   }
+
+   //////////////////////////////////////////////////////////////////////////
+   //
+   MikadoErrorCode TorchBox::train() {
       return MikadoErrorCode::MKO_STATUS_NOOP;
    }
 
@@ -155,23 +161,30 @@ namespace mikado::torchBox {
       // Set up Ctrl-C/break handler, suppress stdout debug-logging and display the banner
       windowsApi::apiSetupConsole(options, TorchBox::outputBanner);
 
-      if (auto rc = torchBox->configure(options); MKO_IS_ERROR(rc)) {
-         str_error() << "Failed to configure TorchBox - code: " << rc << endl;
+      str_info() << "configuration stage" << endl;
+      if (rc = torchBox->configure(options); MKO_IS_ERROR(rc)) {
+         str_error() << "failed to configure TorchBox" << endl;
+         return rc;
+      }
+      else if (MikadoErrorCode::MKO_ERROR_NONE != rc) {
+         str_error() << "no networks were configured" << endl;
          return rc;
       }
 
-      if (auto rc = torchBox->start(); MKO_IS_ERROR(rc)) {
-         str_error() << "Failed to start TorchBox - code: " << rc << endl;
+      str_info() << "training stage" << endl;
+      if (rc = torchBox->train(); MKO_IS_ERROR(rc)) {
+         str_error() << "failed to train TorchBox" << endl;
          return rc;
       }
 
-      str_info() << "shutting down" << endl;
-      if (auto rc = torchBox->stop(); MKO_IS_ERROR(rc)) {
-         str_error() << "Failed to stop TorchBox - code: " << rc << endl;
+      str_info() << "verification stage" << endl;
+      if (rc = torchBox->verify(); MKO_IS_ERROR(rc)) {
+         str_error() << "failed to verify TorchBox" << endl;
          return rc;
       }
 
-      return rc;
+      str_info() << "verified all enabled networks" << endl;
+      return MikadoErrorCode::MKO_ERROR_NONE;
    }
     
 } // namespace mikado::torchBox
@@ -192,6 +205,6 @@ int main(int argc, char *argv[]) {
     windowsApi::apiShutdown();
     common::commonShutdown();
 
-    str_info() << "exiting with code " << exitCode << endl;
+    str_info() << "exiting with code " << (MikadoErrorCode)exitCode << endl;
     return (int)exitCode;
 }

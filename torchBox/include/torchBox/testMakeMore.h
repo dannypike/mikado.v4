@@ -7,12 +7,16 @@
 
 namespace mikado::torchBox {
 
+   typedef common::MikadoErrorCode MikadoErrorCode;
+
    class TestMakeMore : public TestBase {
    public:
-      TestMakeMore() = default;
+      TestMakeMore();
 
       static void addOptions(common::ConfigurePtr cfg);
-      virtual void run() override;
+      virtual MikadoErrorCode configure(common::ConfigurePtr cfg) override;
+      virtual MikadoErrorCode train() override;
+      virtual MikadoErrorCode verify() override;
 
       int64_t vocabSize() const { return (int64_t)itos_.size(); }
 

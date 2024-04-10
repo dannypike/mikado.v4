@@ -11,6 +11,9 @@ namespace mikado::torchBox {
    unsigned int const TORCHBOX_VERSION_MAJOR = 0;
    unsigned int const TORCHBOX_VERSION_MINOR = 1;
 
+   class TestBase;
+   typedef std::shared_ptr<TestBase> TestBasePtr;
+
    class TorchBox : public std::enable_shared_from_this<TorchBox>, public common::BrokerFYI {
    public:
       TorchBox()
@@ -19,8 +22,8 @@ namespace mikado::torchBox {
       static void outputBanner();
 
       common::MikadoErrorCode configure(common::ConfigurePtr cfg);
-      common::MikadoErrorCode start();
-      common::MikadoErrorCode stop();
+      common::MikadoErrorCode train();
+      common::MikadoErrorCode verify();
 
    protected:
       void onBrokerMessage(common::WebSocketPtr broker, ix::WebSocketMessagePtr const &msg);
@@ -31,6 +34,7 @@ namespace mikado::torchBox {
       c10::DeviceType c10Device_ = c10::DeviceType::CUDA;   // Default to CUDA and fallback if not found
       torch::TensorOptions torchDevice_ = torch::kCUDA;     // Same value as C10
       std::vector<std::string> testNames_ { common::kMulMat, common::kMakeMore };
+      std::unordered_map<std::string, TestBasePtr> tests_;
    };
     
 } // namespace mikado::torchBox
