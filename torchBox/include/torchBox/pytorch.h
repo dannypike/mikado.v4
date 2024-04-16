@@ -10,7 +10,7 @@ namespace mikado::torchBox {
    ///////////////////////////////////////////////////////////////////////////
    //
    template <class TT>
-   std::string toString(torch::Tensor const &tensor, int64_t count = -1, int64_t start = 0) {
+   std::string toStringFlat(torch::Tensor const &tensor, int64_t count = -1, int64_t start = 0) {
       std::stringstream ss;
       try
       {
@@ -39,6 +39,69 @@ namespace mikado::torchBox {
       }
       return ss.str();
    }
+
+   ///////////////////////////////////////////////////////////////////////////
+   //
+   template<class TT>
+   void toStringTree(std::stringstream &ss, torch::Tensor tensor
+         , std::vector<int64_t> const &extents
+         , std::vector<int64_t> const *ellipsisAt = nullptr) {
+      try
+      {
+         auto sizes = tensor.sizes();
+         auto numel = tensor.numel();
+         TT *data = tensor.data_ptr<TT>();
+
+         typedef std::function<void(std::stringstream &, TT *&, int64_t)> TreeWalker;
+         TreeWalker treeWalker
+            = [&](std::stringstream &ss, TT *&data, int64_t level)
+            {
+               // limit the number of elements to print in this dimension?
+               auto count = sizes[level];
+               if (level < extents.size()) {
+                  if (auto maxCount = extents[level]; maxCount >= 0) {
+                     count = std::min(count, maxCount);
+                  }
+               }
+
+               if (level == sizes.size() - 1) {
+                  ss << "[";
+                  for (int64_t ii = 0; ii < count; ++ii) {
+                     if (0 < ii) {
+                        ss << ", ";
+                     }
+                     ss << data[ii];
+                  }
+                  if (count < sizes[level]) {
+                     ss << ", ...";
+                  }
+                  ss << "]";
+                  data += sizes[level];
+               }
+               else {
+                  ss << "[";
+                  for (int64_t ii = 0; ii < count; ++ii) {
+                     if (0 < ii) {
+                        ss << ", ";
+                     }
+                     treeWalker(ss, data, level + 1);
+                  }
+                  if (count < sizes[level]) {
+                     ss << ", ...";
+                  }
+                  ss << "]";
+               }
+            };
+
+         TT *originalData = data;
+         treeWalker(ss, data, 0);
+      }
+      catch (const std::exception &e)
+      {
+         log_exception(e);
+      }
+   }
+
 } // namespace mikado::common
 
 #endif // TBOX_PYTORCH_H

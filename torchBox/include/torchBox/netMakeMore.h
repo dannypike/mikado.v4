@@ -3,6 +3,7 @@
 #if !defined(TBOX_MAKEMORE_H)
 #define TBOX_MAKEMORE_H
 
+#include "torchBox/pytorch.h"
 #include "torchBox/subsetEnum.h"
 #include "netBase.h"
 
