@@ -40,6 +40,9 @@ set(PRECOMPILED_HEADER_FILES
 	<d3d9.h>	# Direct3D #9
    <dbghelp.h>
 
+   # OpenMP
+   <omp.h>
+
 	# OpenSSL
 	<openssl/bio.h>
 	<openssl/pem.h>
@@ -98,6 +101,11 @@ endif()
 find_package(Boost REQUIRED COMPONENTS date_time filesystem json program_options system)
 target_include_directories(${TARGET} PRIVATE ${Boost_INCLUDE_DIRS})
 target_link_libraries(${TARGET} PRIVATE ${Boost_LIBRARIES})
+
+find_package(OpenMP)
+if(OpenMP_CXX_FOUND)
+    target_link_libraries(${TARGET} PUBLIC OpenMP::OpenMP_CXX)
+endif()
 
 find_package(OpenSSL REQUIRED)
 target_link_libraries(${TARGET} PRIVATE ${OPENSSL_LIBRARIES})
