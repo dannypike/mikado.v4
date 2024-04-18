@@ -335,61 +335,6 @@ namespace mikado::torchBox {
 
    ///////////////////////////////////////////////////////////////////////////
    //
-   MikadoErrorCode NetMakeMore::testIndexTensor() {
-      try
-      {
-         // The following Python code:
-         //    A = torch.tensor([[11, 12, 13], [14, 15, 16], [17, 18, 19], [20, 21, 22], [23, 24, 25], [26, 27, 28]])
-         //    B = torch.tensor([[5, 0], [3, 1], [1, 2], [5, 5]])
-         //    print(A[B])
-         //
-         // produces this output:
-         // 
-         //    tensor([
-         //       [[26, 27, 28], [11, 12, 13]],
-         //       [[20, 21, 22], [14, 15, 16]],
-         //       [[14, 15, 16], [17, 18, 19]],
-         //       [[26, 27, 28], [26, 27, 28]]
-         //    ])
-         //
-         // i.e. the output is built from the contents of A arranged and grouped according
-         // to the indices in B and its shape is [B.size(0), B.size(1), A.size(1)]
-         //
-         // To do this in C++, we need to manually index the tensor A with the tensor B:
-         //
-         Tensor A = torch::tensor({{11, 12, 13}, {14, 15, 16}, {17, 18, 19}, {20, 21, 22}, {23, 24, 25}, {26, 27, 28}});
-         Tensor B = torch::tensor({{5, 0}, {3, 1}, {1, 2}, {5, 5}} );
-
-         vector<int64_t> extents = { B.size(0), B.size(1), A.size(1) };
-         Tensor C = torch::empty(extents);
-
-         // Manually index A with B
-         for (int i = 0; i < B.size(0); i++) {
-            for (int j = 0; j < B.size(1); j++) {
-               C[i][j] = A[B[i][j].item<int>()];
-            }
-         }
-
-         stringstream ss;         
-         ss << "C = ";
-         toStringTree<float>(ss, C, extents);
-         str_info() << ss.rdbuf() << endl;
-         ss.clear();
-
-         ss << "C[1] = ";
-         toStringTree<float>(ss, C.slice(0, 1), extents);
-         str_info() << ss.rdbuf() << endl;
-         ss.clear();
-      }
-      catch (const std::exception &e)
-      {
-         log_exception(e);
-      }
-      return MikadoErrorCode::MKO_STATUS_NOOP;
-   }
-
-   ///////////////////////////////////////////////////////////////////////////
-   //
    MikadoErrorCode NetMakeMore::configure(common::ConfigurePtr cfg) {
       auto startedAt = bt::second_clock::local_time();
       str_info() << "configuring '" << common::kMakeMore << "'" << endl;

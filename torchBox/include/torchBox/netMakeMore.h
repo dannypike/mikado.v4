@@ -32,7 +32,6 @@ namespace mikado::torchBox {
       MikadoErrorCode buildLayers();
       MikadoErrorCode toDevice();
       MikadoErrorCode reportLoss(Subset subsetX, Subset subsetY);
-      MikadoErrorCode testIndexTensor();
 
    private:
       std::map<char, vocab_t> stoi_;
