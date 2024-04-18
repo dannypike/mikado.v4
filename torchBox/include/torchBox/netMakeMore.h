@@ -27,23 +27,27 @@ namespace mikado::torchBox {
       typedef int64_t vocab_t;   // Standard integer type for tensors
       char const kSeparator = '.';
 
-
       MikadoErrorCode readNamesFile();
-      MikadoErrorCode makeTensors();
-      MikadoErrorCode buildDataset(WordIter fromWord, WordIter toWord
-         , std::vector<vocab_t> &xx, std::vector<vocab_t> &yy);
+      MikadoErrorCode createTrainingTensors();
+      MikadoErrorCode buildTrainingData(WordIter fromWord, WordIter toWord);
       MikadoErrorCode buildLayers();
       MikadoErrorCode reportLoss(Subset subsetX, Subset subsetY);
+      MikadoErrorCode testIndexTensor();
 
    private:
       std::map<char, vocab_t> stoi_;
       std::vector<char> itos_;
       vocab_t contextSize_ = 3;
-      vocab_t totalLength_ = 0;
       std::vector<std::string> names_;
+      int64_t trainingDataCount_ = 0;
 
-      long embeddingDim_ = 10;
-      long hiddenLayer_ = 200;
+      // Storage for the data that is wrapped by the tensors
+      std::vector<vocab_t> xx_;
+      std::vector<vocab_t> yy_;
+      float *embeddingData_ = nullptr;
+
+      long nEmbD_ = 10;   // Number of dimensions for each letter in the neural space
+      long nHidden_ = 200;
       torch::Tensor C_;       // trainable parameter
       torch::Tensor bnGain_;  // trainable parameter
       torch::Tensor bnBias_;  // trainable parameter
