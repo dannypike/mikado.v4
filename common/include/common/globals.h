@@ -41,6 +41,7 @@ namespace mikado::common {
    extern std::string const kMakeMoreContextSize;
    extern std::string const kMakeMoreEmbeddingDim;
    extern std::string const kMakeMoreHiddenLayer;
+   extern std::string const kMakeMoreMaxNames;
    extern std::string const kMakeMoreNamesFile;
    extern std::string const kModel;
    extern std::string const kMulMat;

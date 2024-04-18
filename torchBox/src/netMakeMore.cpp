@@ -23,7 +23,10 @@ namespace mikado::torchBox {
    //
    void NetMakeMore::addOptions(common::ConfigurePtr cfg) {
       cfg->addOptions()
-         (common::kMakeMoreNamesFile.c_str(), po::value<string>(), "A text file of names, one per line")
+         (common::kMakeMoreNamesFile.c_str(), po::value<string>()
+            , "A text file of names, one per line")
+         (common::kMakeMoreMaxNames.c_str(), po::value<size_t>()->default_value(numeric_limits<size_t>::max())
+            , "Maximum number of names to read from the file")
          ;
    }
 
@@ -45,27 +48,30 @@ namespace mikado::torchBox {
          return MikadoErrorCode::MKO_ERROR_PATH_NOT_FOUND;
       }
 
-      str_info() << "reading names from " << filename << endl;
+      size_t maxNames = getConfig()->get<size_t>(common::kMakeMoreMaxNames);
+      str_info() << "reading up to " << maxNames << " names from " << filename << endl;
       while (ifs && !ifs.eof()) {
          getline(ifs, name);
-         if (name == "zzyzx") {
-             // End of file marker
-            bool a = true;
+         name = common::trim(name);
+         if (name.empty()) {
+            continue;
          }
-         if (!name.empty()) {
-            ++count;
-            trainingDataCount_ += name.size() + 1; // +1 for the kSeparator
 
-            // Create the tokens for each letter in the name
-            for (auto cc : name + kSeparator) {
-               if (stoi_.insert(make_pair(cc,itos_.size())).second) {
-                  itos_.push_back(cc);
-               }
+         if (maxNames < ++count) {
+            str_info() << "maximum number of names reached" << endl;
+            break;
+         }
+         trainingDataCount_ += name.size() + 1; // +1 for the kSeparator
+
+         // Create the tokens for each letter in the name
+         for (auto cc : name + kSeparator) {
+            if (stoi_.insert(make_pair(cc,itos_.size())).second) {
+               itos_.push_back(cc);
             }
-
-            // Save the words to build the dataset
-            names_.emplace_back(name);
          }
+
+         // Save the word to be a part of the training dataset
+         names_.emplace_back(name);
       }
       assert(trainingDataCount_ < numeric_limits<vocab_t>::max()); // Total length of names is too long?
       str_info() << count << " names read, with " << vocabSize() << " unique characters, total length = "
@@ -121,7 +127,8 @@ namespace mikado::torchBox {
          };
 
          // Split the names into training, development and test sets
-         auto splitCount = names_.size() / 10;
+         assert(2 < names_.size());    // Need at least one in each group
+         auto splitCount = max(names_.size() / 10, 1ull);
          auto itSplit2 = names_.end() - splitCount;
          auto itSplit1 = itSplit2 - splitCount;
 
@@ -135,6 +142,7 @@ namespace mikado::torchBox {
             << ", Y.shape = " << tensors_[(int)Subset::DevelopY].sizes() << endl;
          str_info() << "XYTest: X.shape = " << tensors_[(int)Subset::TestX].sizes()
             << ", Y.shape = " << tensors_[(int)Subset::TestY].sizes() << endl;
+         str_info() << "total number of names = " << names_.size() << endl;
       }
       catch (const std::exception &e)
       {
@@ -165,8 +173,8 @@ namespace mikado::torchBox {
          // Create the embedding layer, e.g. 10 dimensions for each letter
          torch::manual_seed(2147483647);  // not sure why MakeMore doesn't use the RNG above, but we're copying Karpathy's code so we do it this way
          C_ = torch::randn({ vocabSize(), nEmbD_ }, options);
-         //str_info() << "C_.shape = " << getShape(C_) << endl;
-         //str_info() << "C_ = " << toStringFlat<float>(C_, 32) << endl;
+         str_info() << "C_ initialized to: " << endl
+            << C_ << endl;
 
          // Some "magic numbers" to fix problems with using only a simple random initialisation.
          auto scaleW2 = 0.01;
@@ -226,8 +234,6 @@ namespace mikado::torchBox {
          for (auto pairParameter : parameters_) {
             auto parameter = pairParameter.second;
             parameter->set_requires_grad(true);
-            str_debug() << "# " << index++ << " : " << getShape(*parameter) << " = "
-               << parameter->numel() << endl;
             count += parameter->numel();
          }
          parameterCount_ = count;
@@ -286,28 +292,38 @@ namespace mikado::torchBox {
       typedef function<void(Subset, Subset, Tensor, Tensor)> SplitLossType;
       SplitLossType splitLoss
          = [&](Subset subsetX, Subset subsetY, Tensor bnMeanRunning, Tensor bnStdRunning) {
+
          Tensor x = tensors_[(int)subsetX];
          Tensor y = tensors_[(int)subsetY];
-         str_info() << "C = " << getShape(C_) << ", x = " << getShape(x) << endl;
          auto emb = C_.index({x}); // dims: [N, contextSize_, nEmbD_]
-         str_info() << "emb = " << getShape(emb) << endl;
 
          auto embCat = emb.view({ emb.sizes()[0], -1});
-         auto hpReact = embCat.mm(W1_);
+         auto hiddenPreAct = embCat.mm(W1_);
 
-         hpReact = bnGain_ * (hpReact - bnMeanRunning_) / (bnStdRunning_ + epsilon_) + bnBias_;
-         auto h = hpReact.tanh();         // (N, n_hidden)
-         auto logits = h.mm(W2_) + b2_;   // (N, vocab_size)
-   
+         hiddenPreAct = bnGain_ * (hiddenPreAct - bnMeanRunning_) / (bnStdRunning_ + epsilon_) + bnBias_;
+         auto hiddenAct = hiddenPreAct.tanh();  // (N, nHidden)
+         auto logits = hiddenAct.mm(W2_) + b2_;   // (N, vocabSize())
          auto loss = torch::nn::functional::cross_entropy(logits, y);
-         str_info() << subsetX << " loss = " << loss.item<float>() << endl;
+
+         torch::print(str_info(), C_, 160);
+         str_info() << fixed << setprecision(4)
+            << "reportLoss(" << subsetX << ") returned " << loss.item<float>() 
+            << ", with vocabSize = " << vocabSize() << endl;
+         str_info() << "    C.shape = " << getShape(C_) << endl;
+         str_info() << "    x.shape = " << getShape(x) << endl;
+         str_info() << "  emb.shape = " << getShape(emb) << endl;
+         torch::print(str_info() << "  predicted output (logits):" << endl
+            , logits, 240) << endl;
+         torch::print(str_info() << "  predicted output (softmax):" << endl
+            , torch::softmax(logits, 1), 240) << endl;
+         str_info() << "  expected output (classes):" << endl
+            << y << endl;
          };
 
       torch::NoGradGuard no_grad;
       try
       {
-         splitLoss(Subset::TrainX, Subset::TrainY, bnMeanRunning_, bnStdRunning_);
-         splitLoss(Subset::DevelopX, Subset::DevelopY, bnMeanRunning_, bnStdRunning_);
+         splitLoss(subsetX, subsetY, bnMeanRunning_, bnStdRunning_);
       }
       catch (const std::exception &e)
       {

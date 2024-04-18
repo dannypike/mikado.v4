@@ -40,6 +40,7 @@ namespace mikado::common {
    string const kMakeMoreContextSize { "makeMore-contextSize" };
    string const kMakeMoreEmbeddingDim { "makeMore-embeddingDim" };
    string const kMakeMoreHiddenLayer{ "makeMore-hiddenLayer" };
+   string const kMakeMoreMaxNames{ "makeMore-maxNames" };
    string const kMakeMoreNamesFile{ "makeMore-namesFile" };
    string const kModel{ "model" };
    string const kMulMat{ "MulMat" };
