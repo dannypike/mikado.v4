@@ -49,6 +49,12 @@ namespace mikado::common {
    string const kStartComspec{ "start-comspec" };
    string const kStartFolder{ "start-folder" };
    string const kStartRetry{ "start-retry" };
+   string const kTensorC{ "C" };
+   string const kTensorW1{ "W1" };
+   string const kTensorW2{ "W2" };
+   string const kTensorB2{ "B2" };
+   string const kTensorBNGain{ "BNGain" };
+   string const kTensorBNBias{ "BNBias" };
    string const kWindowBroker { "Mikado Broker" };
 
    // Miscellaneous string constants

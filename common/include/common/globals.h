@@ -50,6 +50,12 @@ namespace mikado::common {
    extern std::string const kStartComspec;
    extern std::string const kStartFolder;
    extern std::string const kStartRetry;
+   extern std::string const kTensorC;
+   extern std::string const kTensorW1;
+   extern std::string const kTensorW2;
+   extern std::string const kTensorB2;
+   extern std::string const kTensorBNGain;
+   extern std::string const kTensorBNBias;
    extern std::string const kWindowBroker;
 
    // Miscellaneous string constants

@@ -215,15 +215,16 @@ namespace mikado::torchBox {
 #endif
 
          // All of the parameters are trainable
-         parameters_.push_back(&C_);
-         parameters_.push_back(&W1_);
-         parameters_.push_back(&W2_);
-         parameters_.push_back(&b2_);
-         parameters_.push_back(&bnGain_);
-         parameters_.push_back(&bnBias_);
+         parameters_.insert(make_pair(common::kTensorC, &C_));
+         parameters_.insert(make_pair(common::kTensorW1, &W1_));
+         parameters_.insert(make_pair(common::kTensorW2, &W2_));
+         parameters_.insert(make_pair(common::kTensorB2, &b2_));
+         parameters_.insert(make_pair(common::kTensorBNGain, &bnGain_));
+         parameters_.insert(make_pair(common::kTensorBNBias, &bnBias_));
 
          size_t index = 0, count = 0;
-         for (auto parameter : parameters_) {
+         for (auto pairParameter : parameters_) {
+            auto parameter = pairParameter.second;
             parameter->set_requires_grad(true);
             str_debug() << "# " << index++ << " : " << getShape(*parameter) << " = "
                << parameter->numel() << endl;
@@ -256,8 +257,18 @@ namespace mikado::torchBox {
             tensors_[ii] = tensors_[ii].to(deviceType);
             str_info() << "tensor[" << (Subset)ii << "] is at " << tensors_[ii].device() << endl;
          }
-         for (auto parameter : parameters_) {
-            *parameter = parameter->to(deviceType);
+         C_ = C_.to(deviceType);
+         bnGain_ = bnGain_.to(deviceType);
+         bnBias_ = bnBias_.to(deviceType);
+         W1_ = W1_.to(deviceType);
+         W2_ = W2_.to(deviceType);
+         b2_ = b2_.to(deviceType);
+         bnMeanRunning_ = bnMeanRunning_.to(deviceType);
+         bnStdRunning_ = bnStdRunning_.to(deviceType);
+
+         for (auto pairParameter : parameters_) {
+            auto parameter = pairParameter.second;
+            str_info() << "parameter " << pairParameter.first << " is at " << parameter->device() << endl;
          }
       }
       catch (const std::exception &e)
@@ -283,6 +294,7 @@ namespace mikado::torchBox {
 
          auto embCat = emb.view({ emb.sizes()[0], -1});
          auto hpReact = embCat.mm(W1_);
+
          hpReact = bnGain_ * (hpReact - bnMeanRunning_) / (bnStdRunning_ + epsilon_) + bnBias_;
          auto h = hpReact.tanh();         // (N, n_hidden)
          auto logits = h.mm(W2_) + b2_;   // (N, vocab_size)

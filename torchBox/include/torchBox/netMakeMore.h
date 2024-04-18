@@ -56,7 +56,7 @@ namespace mikado::torchBox {
 
       // Holds a collection of references to the above parameters of the model
       // for updating them during training and also ease of moving them to CUDA
-      std::vector<torch::Tensor *> parameters_;
+      std::map<std::string, torch::Tensor *> parameters_;
 
       torch::Tensor tensors_[(int)Subset::SubsetCount];
    };
