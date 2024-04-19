@@ -27,7 +27,9 @@ namespace mikado::torchBox {
             , "A text file of names, one per line")
          (common::kMakeMoreMaxNames.c_str(), po::value<size_t>()->default_value(numeric_limits<size_t>::max())
             , "Maximum number of names to read from the file")
-         (common::kMakeMoreTrainingSteps.c_str(), po::value<size_t>()->default_value(1000)
+         (common::kMakeMoreTrainingBatch.c_str(), po::value<size_t>()->default_value(32)
+            , "Train in batches to reduce the size of the matrices in the calculations")
+         (common::kMakeMoreTrainingSteps.c_str(), po::value<size_t>()->default_value(200000)
             , "Maximum number of steps to use while training")
          ;
    }
@@ -353,7 +355,9 @@ namespace mikado::torchBox {
       }
 
       auto elapsed = bt::second_clock::local_time() - startedAt;
-      trainingSteps_ = cfg->get<size_t>(common::kMakeMoreTrainingSteps);
+
+      batchSize_ = cfg->get<size_t>(common::kMakeMoreTrainingBatch);
+      maxSteps_ = cfg->get<size_t>(common::kMakeMoreTrainingSteps);
 
       str_info() << "configuring '" << common::kMakeMore << "' took "
          << elapsed << " seconds." << endl;
