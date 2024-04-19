@@ -29,6 +29,8 @@ namespace mikado::torchBox {
             , "Maximum number of names to read from the file")
          (common::kMakeMoreTrainingBatch.c_str(), po::value<size_t>()->default_value(32)
             , "Train in batches to reduce the size of the matrices in the calculations")
+         (common::kMakeMoreTrainingBatchUpdateRate.c_str(), po::value<double>()->default_value(0.001)
+            , "The step size to use to update the batch statistics")
          (common::kMakeMoreTrainingSteps.c_str(), po::value<size_t>()->default_value(200000)
             , "Maximum number of steps to use while training")
          ;
@@ -358,6 +360,7 @@ namespace mikado::torchBox {
 
       batchSize_ = cfg->get<size_t>(common::kMakeMoreTrainingBatch);
       maxSteps_ = cfg->get<size_t>(common::kMakeMoreTrainingSteps);
+      batchUpdateRate_ = cfg->get<double>(common::kMakeMoreTrainingBatch);
 
       str_info() << "configuring '" << common::kMakeMore << "' took "
          << elapsed << " seconds." << endl;

@@ -41,6 +41,7 @@ namespace mikado::torchBox {
       int64_t trainingDataCount_ = 0;
       size_t maxSteps_ = 200000;
       size_t batchSize_ = 32;
+      double batchUpdateRate_ = 0.01;
 
       long nEmbD_ = 10;   // Number of dimensions for each letter in the neural space
       long nHidden_ = 200;

@@ -44,6 +44,7 @@ namespace mikado::common {
    extern std::string const kMakeMoreMaxNames;
    extern std::string const kMakeMoreNamesFile;
    extern std::string const kMakeMoreTrainingBatch;
+   extern std::string const kMakeMoreTrainingBatchUpdateRate;
    extern std::string const kMakeMoreTrainingSteps;
    extern std::string const kModel;
    extern std::string const kMulMat;

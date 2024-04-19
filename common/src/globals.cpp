@@ -43,6 +43,7 @@ namespace mikado::common {
    string const kMakeMoreMaxNames { "makeMore-maxNames" };
    string const kMakeMoreNamesFile { "makeMore-namesFile" };
    string const kMakeMoreTrainingBatch { "makeMore-trainingBatch" };
+   string const kMakeMoreTrainingBatchUpdateRate{ "makeMore-trainingBatchUpdateRate" };
    string const kMakeMoreTrainingSteps { "makeMore-trainingSteps" };
    string const kModel { "model" };
    string const kMulMat { "MulMat" };
