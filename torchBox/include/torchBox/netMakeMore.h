@@ -39,6 +39,7 @@ namespace mikado::torchBox {
       vocab_t contextSize_ = 3;
       std::vector<std::string> names_;
       int64_t trainingDataCount_ = 0;
+      size_t trainingSteps_ = 0;
 
       long nEmbD_ = 10;   // Number of dimensions for each letter in the neural space
       long nHidden_ = 200;

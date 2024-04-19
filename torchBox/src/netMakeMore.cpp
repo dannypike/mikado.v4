@@ -27,6 +27,8 @@ namespace mikado::torchBox {
             , "A text file of names, one per line")
          (common::kMakeMoreMaxNames.c_str(), po::value<size_t>()->default_value(numeric_limits<size_t>::max())
             , "Maximum number of names to read from the file")
+         (common::kMakeMoreTrainingSteps.c_str(), po::value<size_t>()->default_value(1000)
+            , "Maximum number of steps to use while training")
          ;
    }
 
@@ -351,6 +353,8 @@ namespace mikado::torchBox {
       }
 
       auto elapsed = bt::second_clock::local_time() - startedAt;
+      trainingSteps_ = cfg->get<size_t>(common::kMakeMoreTrainingSteps);
+
       str_info() << "configuring '" << common::kMakeMore << "' took "
          << elapsed << " seconds." << endl;
       return MikadoErrorCode::MKO_ERROR_NONE;
@@ -361,6 +365,7 @@ namespace mikado::torchBox {
    MikadoErrorCode NetMakeMore::train() {
       auto startedAt = bt::second_clock::local_time();
       str_info() << "training '" << common::kMakeMore << "'" << endl;
+
 
       auto elapsed = bt::second_clock::local_time() - startedAt;
       str_info() << "training '" << common::kMakeMore << "' took "
