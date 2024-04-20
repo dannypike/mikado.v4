@@ -33,6 +33,7 @@ namespace mikado::torchBox {
       MikadoErrorCode toDevice();
       MikadoErrorCode reportLoss(Subset subsetX, Subset subsetY);
       MikadoErrorCode verifyParameters(std::source_location src = std::source_location::current());
+      MikadoErrorCode verifyLocation(torch::Tensor ts, bool throwOnError = false);
       size_t addParameter(std::string name, torch::Tensor parameter);
 
    private:

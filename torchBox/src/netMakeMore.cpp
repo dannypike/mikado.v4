@@ -371,6 +371,30 @@ namespace mikado::torchBox {
 
    ///////////////////////////////////////////////////////////////////////////
    //
+   MikadoErrorCode NetMakeMore::verifyLocation(torch::Tensor ts, bool throwOnError) {
+      // Is the tensor on the configured device?
+
+      // Note that device() returns the specific cuda device, whereas getC10DeviceType()
+      // tells us whether it is CUDA or not. So we cannot compare the two return values
+      // directly; we need to ask "is it cuda" and "do we want it to be cuda"?
+      auto wantCuda = (getC10Device() == c10::DeviceType::CUDA);
+      auto isCuda = ts.device().is_cuda();
+      if (wantCuda == isCuda) {
+         return MikadoErrorCode::MKO_ERROR_NONE;
+      }
+
+      ostringstream ss;
+      ss << "expected tensor to be on '" << getC10Device()
+         << "', but it is on '" << ts.device() << "'";
+      str_error() << ss.rdbuf() << endl;
+      if (throwOnError) {
+         throw std::runtime_error(ss.str());
+      }
+      return MikadoErrorCode::MKO_ERROR_DEVICE_MISMATCH;
+   }
+
+   ///////////////////////////////////////////////////////////////////////////
+   //
    size_t NetMakeMore::addParameter(std::string name, torch::Tensor parameter) {
       if (!parameter.is_leaf()) {
          ostringstream ss;
@@ -449,19 +473,29 @@ namespace mikado::torchBox {
 
             // Forward pass
             auto emb = C_.index({ batchX });
+            verifyLocation(emb, true);
+
             // CoPilot suggested this: auto embCat = emb.view({ emb.sizes()[0], -1 });
             auto embCat = emb.view({ -1, contextSize_ * nEmbD_ });
+            verifyLocation(embCat, true);
+            
             auto hiddenPreAct = embCat.mm(W1_);
+            verifyLocation(hiddenPreAct, true);
 
             // Batch normalisation - ensure that the hpreact values are a Gaussian distribution scaled and offset
             // by a gain and a bias that are trained(part of the parameters)
             auto bnMeanI = hiddenPreAct.mean(0, true);      // For each iteration, we use the batch's mean and std, but for
+            verifyLocation(bnMeanI, true);
+
             auto bnStdI = hiddenPreAct.std(0, true);        // inference, we will use an estimated mean & std(see the
+            verifyLocation(bnStdI, true);
+            
             // bnmean_running / bnmean_std logic below.It's not exact, but
             // it is close enough and this is how PyTorch works.
 
             // Now we have what we need to normalize the hidden layer pre-activation values
             hiddenPreAct = bnGain_ * (hiddenPreAct - bnMeanRunning_) / (bnStdRunning_ + epsilon_) + bnBias_;
+            verifyLocation(hiddenPreAct, true);
 
             // IMPORTANT NOTE:
             // BN causes the output of the hidden layer to "jitter" at random because it links the output of each
@@ -474,15 +508,25 @@ namespace mikado::torchBox {
             {
                NoGradGuard no_grad;
                bnMeanRunning_ = (1.0 - batchUpdateRate_) * bnMeanRunning_ + batchUpdateRate_ * bnMeanI;
+               verifyLocation(bnMeanRunning_, true);
                bnStdRunning_ = (1.0 - batchUpdateRate_) * bnStdRunning_ + batchUpdateRate_ * bnStdI;
+               verifyLocation(bnStdRunning_, true);
             }
 
             auto hiddenAct = hiddenPreAct.tanh();
+            verifyLocation(hiddenAct, true);
+            
             auto logits = hiddenAct.mm(W2_) + b2_;
+            verifyLocation(logits, true);
+
             auto loss = torch::nn::functional::cross_entropy(logits, batchY);
+            verifyLocation(loss, true);
 
             // Compute the gradients
+            optimizer.zero_grad();
+
             loss.backward();
+            verifyLocation(loss, true);
 
             // Update the parameters from the gradients
             optimizer.step();

@@ -92,6 +92,7 @@ namespace mikado::torchBox {
             return rc;
          }
          networks_.insert(make_pair(move(netName), network));
+         rc = MikadoErrorCode::MKO_ERROR_NONE;
       }
       return rc;
    }
