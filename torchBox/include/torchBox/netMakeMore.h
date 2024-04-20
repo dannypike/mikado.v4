@@ -34,7 +34,7 @@ namespace mikado::torchBox {
       MikadoErrorCode reportLoss(Subset subsetX, Subset subsetY);
       MikadoErrorCode verifyParameters(std::source_location src = std::source_location::current());
       MikadoErrorCode verifyLocation(torch::Tensor ts, bool throwOnError = false);
-      size_t addParameter(std::string name, torch::Tensor parameter);
+      size_t addParameter(std::string name, torch::Tensor *parameter);
 
    private:
       std::map<char, vocab_t> stoi_;
@@ -65,7 +65,7 @@ namespace mikado::torchBox {
       // We hold separate vectors for the names and the parameters themselves becausde
       // we need to be able to access the parameters_ as a single list during back-propagation
       std::vector<std::string> parameterNames_;
-      std::vector<torch::Tensor> parameters_;
+      std::vector<torch::Tensor*> parameters_;
 
       torch::Tensor tensors_[(int)Subset::SubsetCount];
    };

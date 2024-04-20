@@ -231,14 +231,15 @@ namespace mikado::torchBox {
 #endif
 
          // Record the trainable parameters, for the optimizer in the train() step
-         parameterCount_ = 0
-            + addParameter(common::kTensorC, C_)
-            + addParameter(common::kTensorW1, W1_)
-            + addParameter(common::kTensorW2, W2_)
-            + addParameter(common::kTensorB2, b2_)
-            + addParameter(common::kTensorBNGain, bnGain_)
-            + addParameter(common::kTensorBNBias, bnBias_)
-            ;
+         parameterCount_ = addParameter(common::kTensorC, &C_);
+         parameterCount_ += addParameter(common::kTensorW1, &W1_);
+         parameterCount_ += addParameter(common::kTensorW2, &W2_);
+         parameterCount_ += addParameter(common::kTensorB2, &b2_);
+         parameterCount_ += addParameter(common::kTensorBNGain, &bnGain_);
+         parameterCount_ += addParameter(common::kTensorBNBias, &bnBias_);
+         if (auto rc = verifyParameters(); MKO_IS_ERROR(rc)) {
+            return rc;
+         }
 
          str_info() << "total number of parameters: " << parameterCount_ << endl;
       }
@@ -279,7 +280,7 @@ namespace mikado::torchBox {
          for (auto ii = 0; ii < nameCount; ++ii) {
             auto parameter = parameters_[ii];
             str_info() << "parameter " << parameterNames_[ii]
-               << " is at " << parameters_[ii].device() << endl;
+               << " is at " << parameters_[ii]->device() << endl;
          }
 
          if (auto rc = verifyParameters(); MKO_IS_ERROR(rc)) {
@@ -351,7 +352,7 @@ namespace mikado::torchBox {
       auto badCount = 0;
       for (auto ii = 0; ii < parameterNames_.size(); ++ii) {
          auto parameter = parameters_[ii];
-         if (!parameter.is_leaf()) {
+         if (!parameter->is_leaf()) {
             if (0 == badCount++) {
                ss << "'";
             }
@@ -365,6 +366,21 @@ namespace mikado::torchBox {
          ss << ((1 == badCount) ? " is not a leaf tensor" : " are not leaf tensors");
          str_error(src) << ss.rdbuf() << endl;
          return MikadoErrorCode::MKO_ERROR_NOT_A_LEAF;
+      }
+
+      // Make sure that the "parameters_" are still pointing to the correct tensors
+      vector<torch::Tensor *> expected = { &C_, &W1_, &W2_, &b2_, &bnGain_, &bnBias_ };
+      vector<std::string> expectedNames = { "C_", "W1_", "W2_", "b2_", "bnGain_", "bnBias_" };
+      if (expected.size() != parameters_.size()) {
+         str_error() << "expected " << expected.size() << " parameters, but found " << parameters_.size() << endl;
+         return MikadoErrorCode::MKO_ERROR_PARAMETER_MISMATCH;
+      }
+      for (auto ii = 0; ii < expected.size(); ++ii) {
+         if (expected[ii] != parameters_[ii]) {
+            str_error() << "expected parameter " << expectedNames[ii] << " to be '" << expected[ii]
+               << "', but found '" << parameters_[ii] << "'" << endl;
+            return MikadoErrorCode::MKO_ERROR_PARAMETER_MISMATCH;
+         }
       }
       return MikadoErrorCode::MKO_ERROR_NONE;
    }
@@ -395,17 +411,17 @@ namespace mikado::torchBox {
 
    ///////////////////////////////////////////////////////////////////////////
    //
-   size_t NetMakeMore::addParameter(std::string name, torch::Tensor parameter) {
-      if (!parameter.is_leaf()) {
+   size_t NetMakeMore::addParameter(std::string name, torch::Tensor *parameter) {
+      if (!parameter->is_leaf()) {
          ostringstream ss;
          ss << "parameter '" << name << "' is not a leaf tensor";
          throw std::invalid_argument(ss.str());
       }
 
       parameterNames_.emplace_back(name);
-      parameter.set_requires_grad(true);
+      parameter->set_requires_grad(true);
       parameters_.push_back(parameter);
-      return parameter.numel();
+      return parameter->numel();
    }
 
    ///////////////////////////////////////////////////////////////////////////
@@ -459,7 +475,7 @@ namespace mikado::torchBox {
          if (auto rc = verifyParameters(); MKO_IS_ERROR(rc)) {
             return rc;
          }  
-         torch::optim::Adam optimizer(parameters_);
+         //torch::optim::Adam optimizer(parameters_);
 
          for (auto step = 0; step < maxSteps_; ++step) {
             if (step % reportProgress_ == 0) {
@@ -522,14 +538,32 @@ namespace mikado::torchBox {
             auto loss = torch::nn::functional::cross_entropy(logits, batchY);
             verifyLocation(loss, true);
 
-            // Compute the gradients
-            optimizer.zero_grad();
+            // Zero out the gradients from the previous iteration
+            //optimizer.zero_grad();
+            for (auto p : parameters_) {
+               if (auto &grad = p->grad(); grad.defined()) { // grad() is empty for the first iteration
+                  grad.zero_();
+               }
+            }
 
+            // Compute the gradients
             loss.backward();
             verifyLocation(loss, true);
 
             // Update the parameters from the gradients
-            optimizer.step();
+            //optimizer.step();
+            auto lr = (step < 100000) ? 0.1 : 0.01;    // step learning rate decay, viz Adam
+            for (auto ii = 0; ii < parameters_.size(); ++ii) {
+               *parameters_[ii] = *parameters_[ii] + -lr * parameters_[ii]->grad();
+            }
+            //for (auto p : parameters_) {
+            //   ostringstream ss;
+            //   ss << loss.grad();
+            //   p = p + -lr * p.grad();
+            //}
+            if (auto rc = verifyParameters(); MKO_IS_ERROR(rc)) {
+               return rc;
+            }
 
             // Record and report the progress
             logLosses.push_back(loss.log10().item<float>());

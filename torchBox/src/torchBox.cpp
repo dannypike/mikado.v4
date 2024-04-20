@@ -205,19 +205,19 @@ namespace mikado::torchBox {
 //////////////////////////////////////////////////////////////////////////
 //
 int main(int argc, char *argv[]) {
-    if (auto rc = common::commonInitialize(argc, argv, mikado::torchBox::TorchBox::outputBanner); MKO_IS_ERROR(rc)) {
-        return (int)rc;
-    }
-    if (auto rc = windowsApi::apiInitialize(argc, argv); MKO_IS_ERROR(rc)) {
-        return (int)rc;
-    }
+   if (auto rc = common::commonInitialize(argc, argv, mikado::torchBox::TorchBox::outputBanner); MKO_IS_ERROR(rc)) {
+      return (int)rc;
+   }
+   if (auto rc = windowsApi::apiInitialize(argc, argv); MKO_IS_ERROR(rc)) {
+      return (int)rc;
+   }
 
-    auto exitCode = (int)mikado::torchBox::main(argc, argv);
-    assert(STATUS_PENDING != (int)exitCode);   // Not allowed to return 259 from any process in Windows, as it is reserved for the system.
+   auto exitCode = (int)mikado::torchBox::main(argc, argv);
+   assert(STATUS_PENDING != (int)exitCode);   // Not allowed to return 259 from any process in Windows, as it is reserved for the system.
     
-    windowsApi::apiShutdown();
-    common::commonShutdown();
+   windowsApi::apiShutdown();
+   common::commonShutdown();
 
-    str_info() << "exiting with code " << (MikadoErrorCode)exitCode << endl;
-    return (int)exitCode;
+   str_info() << "exiting with code " << (MikadoErrorCode)exitCode << endl;
+   return (int)exitCode;
 }

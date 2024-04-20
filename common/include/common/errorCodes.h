@@ -65,6 +65,7 @@ namespace mikado::common {
       (MKO_ERROR_TEST_NOT_FOUND = 132)
       (MKO_ERROR_NOT_A_LEAF = 133)
       (MKO_ERROR_DEVICE_MISMATCH = 134)
+      (MKO_ERROR_PARAMETER_MISMATCH = 135)
       )
 
    std::ostream &operator<<(std::ostream &os, enum MikadoErrorCode code);
