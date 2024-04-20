@@ -27,9 +27,11 @@ namespace mikado::torchBox {
             , "A text file of names, one per line")
          (common::kMakeMoreMaxNames.c_str(), po::value<size_t>()->default_value(numeric_limits<size_t>::max())
             , "Maximum number of names to read from the file")
+         (common::kMakeMoreReportProgress.c_str(), po::value<size_t>()->default_value(10000)
+            , "Number of steps between each report of training progress")
          (common::kMakeMoreTrainingBatch.c_str(), po::value<size_t>()->default_value(32)
             , "Train in batches to reduce the size of the matrices in the calculations")
-         (common::kMakeMoreTrainingBatchUpdateRate.c_str(), po::value<double>()->default_value(0.001)
+         (common::kMakeMoreTrainingBatchUpdateRate.c_str(), po::value<float>()->default_value(0.001)
             , "The step size to use to update the batch statistics")
          (common::kMakeMoreTrainingSteps.c_str(), po::value<size_t>()->default_value(200000)
             , "Maximum number of steps to use while training")
@@ -228,21 +230,16 @@ namespace mikado::torchBox {
          }
 #endif
 
-         // All of the parameters are trainable
-         parameters_.insert(make_pair(common::kTensorC, &C_));
-         parameters_.insert(make_pair(common::kTensorW1, &W1_));
-         parameters_.insert(make_pair(common::kTensorW2, &W2_));
-         parameters_.insert(make_pair(common::kTensorB2, &b2_));
-         parameters_.insert(make_pair(common::kTensorBNGain, &bnGain_));
-         parameters_.insert(make_pair(common::kTensorBNBias, &bnBias_));
+         // Record the trainable parameters, for the optimizer in the train() step
+         parameterCount_ = 0
+            + addParameter(common::kTensorC, C_)
+            + addParameter(common::kTensorW1, W1_)
+            + addParameter(common::kTensorW2, W2_)
+            + addParameter(common::kTensorB2, b2_)
+            + addParameter(common::kTensorBNGain, bnGain_)
+            + addParameter(common::kTensorBNBias, bnBias_)
+            ;
 
-         size_t index = 0, count = 0;
-         for (auto pairParameter : parameters_) {
-            auto parameter = pairParameter.second;
-            parameter->set_requires_grad(true);
-            count += parameter->numel();
-         }
-         parameterCount_ = count;
          str_info() << "total number of parameters: " << parameterCount_ << endl;
       }
       catch (const std::exception &e)
@@ -278,9 +275,15 @@ namespace mikado::torchBox {
          bnMeanRunning_ = bnMeanRunning_.to(deviceType);
          bnStdRunning_ = bnStdRunning_.to(deviceType);
 
-         for (auto pairParameter : parameters_) {
-            auto parameter = pairParameter.second;
-            str_info() << "parameter " << pairParameter.first << " is at " << parameter->device() << endl;
+         auto nameCount = parameterNames_.size();
+         for (auto ii = 0; ii < nameCount; ++ii) {
+            auto parameter = parameters_[ii];
+            str_info() << "parameter " << parameterNames_[ii]
+               << " is at " << parameters_[ii].device() << endl;
+         }
+
+         if (auto rc = verifyParameters(); MKO_IS_ERROR(rc)) {
+            return rc;
          }
       }
       catch (const std::exception &e)
@@ -311,19 +314,19 @@ namespace mikado::torchBox {
          auto logits = hiddenAct.mm(W2_) + b2_;   // (N, vocabSize())
          auto loss = torch::nn::functional::cross_entropy(logits, y);
 
-         torch::print(str_info(), C_, 160);
+         //torch::print(str_info(), C_, 160);
          str_info() << fixed << setprecision(4)
             << "reportLoss(" << subsetX << ") returned " << loss.item<float>() 
             << ", with vocabSize = " << vocabSize() << endl;
          str_info() << "    C.shape = " << getShape(C_) << endl;
          str_info() << "    x.shape = " << getShape(x) << endl;
          str_info() << "  emb.shape = " << getShape(emb) << endl;
-         torch::print(str_info() << "  predicted output (logits):" << endl
-            , logits, 240) << endl;
-         torch::print(str_info() << "  predicted output (softmax):" << endl
-            , torch::softmax(logits, 1), 240) << endl;
-         str_info() << "  expected output (classes):" << endl
-            << y << endl;
+         //torch::print(str_info() << "  predicted output (logits):" << endl
+         //   , logits, 240) << endl;
+         //torch::print(str_info() << "  predicted output (softmax):" << endl
+         //   , torch::softmax(logits, 1), 240) << endl;
+         //str_info() << "  expected output (classes):" << endl
+         //   << y << endl;
          };
 
       torch::NoGradGuard no_grad;
@@ -341,26 +344,77 @@ namespace mikado::torchBox {
 
    ///////////////////////////////////////////////////////////////////////////
    //
+   MikadoErrorCode NetMakeMore::verifyParameters(source_location src) {
+      ostringstream ss;
+
+      ss << "the following: ";
+      auto badCount = 0;
+      for (auto ii = 0; ii < parameterNames_.size(); ++ii) {
+         auto parameter = parameters_[ii];
+         if (!parameter.is_leaf()) {
+            if (0 == badCount++) {
+               ss << "'";
+            }
+            else {
+               ss << ", '";
+            }
+            ss << parameterNames_[ii] << "'";
+         }
+      }
+      if (0 < badCount) {
+         ss << ((1 == badCount) ? " is not a leaf tensor" : " are not leaf tensors");
+         str_error(src) << ss.rdbuf() << endl;
+         return MikadoErrorCode::MKO_ERROR_NOT_A_LEAF;
+      }
+      return MikadoErrorCode::MKO_ERROR_NONE;
+   }
+
+   ///////////////////////////////////////////////////////////////////////////
+   //
+   size_t NetMakeMore::addParameter(std::string name, torch::Tensor parameter) {
+      if (!parameter.is_leaf()) {
+         ostringstream ss;
+         ss << "parameter '" << name << "' is not a leaf tensor";
+         throw std::invalid_argument(ss.str());
+      }
+
+      parameterNames_.emplace_back(name);
+      parameter.set_requires_grad(true);
+      parameters_.push_back(parameter);
+      return parameter.numel();
+   }
+
+   ///////////////////////////////////////////////////////////////////////////
+   //
    MikadoErrorCode NetMakeMore::configure(common::ConfigurePtr cfg) {
       auto startedAt = bt::second_clock::local_time();
       str_info() << "configuring '" << common::kMakeMore << "'" << endl;
 
+      string errorText;
       auto rc = MikadoErrorCode::MKO_ERROR_NONE;
       if (MKO_IS_ERROR(rc = readNamesFile())
          || MKO_IS_ERROR(rc = createTrainingTensors())
          || MKO_IS_ERROR(rc = buildLayers())
+         || MKO_IS_ERROR(rc = verifyParameters())
          || MKO_IS_ERROR(rc = toDevice())
+         || MKO_IS_ERROR(rc = verifyParameters())
          || MKO_IS_ERROR(rc = reportLoss(Subset::TrainX, Subset::TrainY))
          || MKO_IS_ERROR(rc = reportLoss(Subset::DevelopX, Subset::DevelopY))
+         || MKO_IS_ERROR(rc = verifyParameters())
          ) {
+
+         if (!errorText.empty()) {
+            str_error() << errorText << endl;
+         }
          return rc;
       }
 
       auto elapsed = bt::second_clock::local_time() - startedAt;
 
       batchSize_ = cfg->get<size_t>(common::kMakeMoreTrainingBatch);
+      batchUpdateRate_ = cfg->get<float>(common::kMakeMoreTrainingBatchUpdateRate);
+      reportProgress_ = cfg->get<size_t>(common::kMakeMoreReportProgress);
       maxSteps_ = cfg->get<size_t>(common::kMakeMoreTrainingSteps);
-      batchUpdateRate_ = cfg->get<double>(common::kMakeMoreTrainingBatch);
 
       str_info() << "configuring '" << common::kMakeMore << "' took "
          << elapsed << " seconds." << endl;
@@ -373,6 +427,79 @@ namespace mikado::torchBox {
       auto startedAt = bt::second_clock::local_time();
       str_info() << "training '" << common::kMakeMore << "'" << endl;
 
+      std::string errorText;
+      vector<float> logLosses;
+      try
+      {
+         // We need an optimizer to be able to clear the old gradients
+         if (auto rc = verifyParameters(); MKO_IS_ERROR(rc)) {
+            return rc;
+         }  
+         torch::optim::Adam optimizer(parameters_);
+
+         for (auto step = 0; step < maxSteps_; ++step) {
+            if (step % reportProgress_ == 0) {
+               str_info() << "starting training step " << step << endl;
+            }
+            
+            // Select a random batch of training data
+            auto indices = torch::randperm(tensors_[(int)Subset::TrainX].sizes()[0]);
+            auto batchX = tensors_[(int)Subset::TrainX].index({ indices.slice(0, 0, batchSize_) });
+            auto batchY = tensors_[(int)Subset::TrainY].index({ indices.slice(0, 0, batchSize_) });
+
+            // Forward pass
+            auto emb = C_.index({ batchX });
+            // CoPilot suggested this: auto embCat = emb.view({ emb.sizes()[0], -1 });
+            auto embCat = emb.view({ -1, contextSize_ * nEmbD_ });
+            auto hiddenPreAct = embCat.mm(W1_);
+
+            // Batch normalisation - ensure that the hpreact values are a Gaussian distribution scaled and offset
+            // by a gain and a bias that are trained(part of the parameters)
+            auto bnMeanI = hiddenPreAct.mean(0, true);      // For each iteration, we use the batch's mean and std, but for
+            auto bnStdI = hiddenPreAct.std(0, true);        // inference, we will use an estimated mean & std(see the
+            // bnmean_running / bnmean_std logic below.It's not exact, but
+            // it is close enough and this is how PyTorch works.
+
+            // Now we have what we need to normalize the hidden layer pre-activation values
+            hiddenPreAct = bnGain_ * (hiddenPreAct - bnMeanRunning_) / (bnStdRunning_ + epsilon_) + bnBias_;
+
+            // IMPORTANT NOTE:
+            // BN causes the output of the hidden layer to "jitter" at random because it links the output of each
+            // neuron to the others in the same batch, because the output now depends on the mean/std of all of the
+            // neurons. However, this "unwanted" side effect of BN actually has a useful side-effect: it acts as a
+            // form of "data augmentation", making it harder for the nn to "overfit" to the training data.
+
+            // Now update the running estimates of the BN mean and std. This is "outside" the NN training, so
+            // we do not need PyTorch to calculate any gradients
+            {
+               NoGradGuard no_grad;
+               bnMeanRunning_ = (1.0 - batchUpdateRate_) * bnMeanRunning_ + batchUpdateRate_ * bnMeanI;
+               bnStdRunning_ = (1.0 - batchUpdateRate_) * bnStdRunning_ + batchUpdateRate_ * bnStdI;
+            }
+
+            auto hiddenAct = hiddenPreAct.tanh();
+            auto logits = hiddenAct.mm(W2_) + b2_;
+            auto loss = torch::nn::functional::cross_entropy(logits, batchY);
+
+            // Compute the gradients
+            loss.backward();
+
+            // Update the parameters from the gradients
+            optimizer.step();
+
+            // Record and report the progress
+            logLosses.push_back(loss.log10().item<float>());
+            if (step % reportProgress_ == 0) {
+               str_info() << "after step " << setfill(' ') << setw(6) << step
+                  << ", loss = " << fixed << setprecision(4) << loss.item<float>() << endl;
+            }
+         }
+      }
+      catch (const std::exception &e)
+      {
+         log_exception(e);
+         return MikadoErrorCode::MKO_ERROR_EXCEPTION;
+      }
 
       auto elapsed = bt::second_clock::local_time() - startedAt;
       str_info() << "training '" << common::kMakeMore << "' took "

@@ -99,13 +99,25 @@ namespace mikado::torchBox {
    //////////////////////////////////////////////////////////////////////////
    //
    MikadoErrorCode TorchBox::verify() {
+
+      for (auto pp : networks_) {
+         if (auto rc = pp.second->verify(); MKO_IS_ERROR(rc)) {
+            return rc;
+         }
+      }
       return MikadoErrorCode::MKO_STATUS_NOOP;
    }
 
    //////////////////////////////////////////////////////////////////////////
    //
    MikadoErrorCode TorchBox::train() {
-      return MikadoErrorCode::MKO_STATUS_NOOP;
+
+      for (auto pp : networks_) {
+         if (auto rc = pp.second->train(); MKO_IS_ERROR(rc)) {
+            return rc;
+         }
+      }
+      return MikadoErrorCode::MKO_ERROR_NONE;
    }
 
    //////////////////////////////////////////////////////////////////////////

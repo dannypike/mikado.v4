@@ -32,6 +32,8 @@ namespace mikado::torchBox {
       MikadoErrorCode buildLayers();
       MikadoErrorCode toDevice();
       MikadoErrorCode reportLoss(Subset subsetX, Subset subsetY);
+      MikadoErrorCode verifyParameters(std::source_location src = std::source_location::current());
+      size_t addParameter(std::string name, torch::Tensor parameter);
 
    private:
       std::map<char, vocab_t> stoi_;
@@ -40,8 +42,9 @@ namespace mikado::torchBox {
       std::vector<std::string> names_;
       int64_t trainingDataCount_ = 0;
       size_t maxSteps_ = 200000;
+      size_t reportProgress_ = 10000;
       size_t batchSize_ = 32;
-      double batchUpdateRate_ = 0.01;
+      float batchUpdateRate_ = 0.01;
 
       long nEmbD_ = 10;   // Number of dimensions for each letter in the neural space
       long nHidden_ = 200;
@@ -53,12 +56,15 @@ namespace mikado::torchBox {
       torch::Tensor b2_;      // trainable parameter
       torch::Tensor bnMeanRunning_;
       torch::Tensor bnStdRunning_;
-      double const epsilon_ = 1e-5;  // prevent DIV / 0 when dividing hpreact by the std
+      float const epsilon_ = 1e-5;  // prevent DIV / 0 when dividing hpreact by the std
       size_t parameterCount_ = 0;
 
       // Holds a collection of references to the above parameters of the model
       // for updating them during training and also ease of moving them to CUDA
-      std::map<std::string, torch::Tensor *> parameters_;
+      // We hold separate vectors for the names and the parameters themselves becausde
+      // we need to be able to access the parameters_ as a single list during back-propagation
+      std::vector<std::string> parameterNames_;
+      std::vector<torch::Tensor> parameters_;
 
       torch::Tensor tensors_[(int)Subset::SubsetCount];
    };
