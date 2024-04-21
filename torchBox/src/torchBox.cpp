@@ -84,6 +84,11 @@ namespace mikado::torchBox {
          else if (boost::iequals(netName, common::kMakeMore)) {
             network = make_shared<NetMakeMore>();
          }
+         else {
+            str_error() << "unrecognized network name: '" << netName
+               << "' in the configuration" << endl;
+            continue;
+         }
          network->setConfig(cfg_);
          network->setC10Device(c10Device_);
          network->setTorchDevice(torchDevice_);
@@ -93,6 +98,10 @@ namespace mikado::torchBox {
          }
          networks_.insert(make_pair(move(netName), network));
          rc = MikadoErrorCode::MKO_ERROR_NONE;
+      }
+      if (networks_.empty()) {
+         str_error() << "no networks were configured" << endl;
+         return MikadoErrorCode::MKO_ERROR_NO_NETWORKS;
       }
       return rc;
    }
