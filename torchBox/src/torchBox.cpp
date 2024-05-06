@@ -5,6 +5,7 @@
 #include "torchBox.h"
 #include "torchBox/netMakeMore.h"
 #include "torchBox/netMulMat.h"
+#include "torchBox/netMnistDCGAN.h"
 
 namespace api = mikado::windowsApi;
 namespace bt = boost::posix_time;
@@ -13,7 +14,7 @@ namespace po = boost::program_options;
 namespace windowsApi = mikado::windowsApi;
 typedef common::MikadoErrorCode MikadoErrorCode;
 using namespace std;
-using namespace std::filesystem;
+using namespace filesystem;
 
 ///////////////////////////////////////////////////////////////////////
 // Force the linker to import mimalloc before anything else, so that it
@@ -84,6 +85,9 @@ namespace mikado::torchBox {
          else if (boost::iequals(netName, common::kMakeMore)) {
             network = make_shared<NetMakeMore>();
          }
+         else if (boost::iequals(netName, common::kMnistDCGAN)) {
+            network = make_shared<NetMnistDCGAN>();
+         }
          else {
             str_error() << "unrecognized network name: '" << netName
                << "' in the configuration" << endl;
@@ -123,8 +127,19 @@ namespace mikado::torchBox {
    MikadoErrorCode TorchBox::train() {
 
       for (auto pp : networks_) {
-         if (auto rc = pp.second->train(); MKO_IS_ERROR(rc)) {
-            return rc;
+         try
+         {
+            if (auto rc = pp.second->train(); MKO_IS_ERROR(rc)) {
+               return rc;
+            }
+         }
+         catch (const c10::Error &e)
+         {
+            log_exception(e);
+         }
+         catch (const exception &e)
+         {
+            log_exception(e);
          }
       }
       return MikadoErrorCode::MKO_ERROR_NONE;
@@ -172,6 +187,7 @@ namespace mikado::torchBox {
 
       // Add the network options
       NetMakeMore::addOptions(options);
+      NetMnistDCGAN::addOptions(options);
 
       // There is a typical sequence of processing options, that we do for all of the applications
       auto rc = options->defaultProcessing(argc, argv, TorchBox::outputBanner);
@@ -214,6 +230,8 @@ namespace mikado::torchBox {
 //////////////////////////////////////////////////////////////////////////
 //
 int main(int argc, char *argv[]) {
+   google::InitGoogleLogging(argv[0]);
+
    if (auto rc = common::commonInitialize(argc, argv, mikado::torchBox::TorchBox::outputBanner); MKO_IS_ERROR(rc)) {
       return (int)rc;
    }

@@ -46,6 +46,10 @@ namespace mikado::common {
    string const kMakeMoreTrainingBatch { "makeMore-trainingBatch" };
    string const kMakeMoreTrainingBatchUpdateRate { "makeMore-trainingBatchUpdateRate" };
    string const kMakeMoreTrainingSteps { "makeMore-trainingSteps" };
+   string const kMnistDCGAN { "MnistDCGAN" };
+   string const kMnistDCGANEpochs { "mnistDCGAN-epochs" };
+   string const kMnistDCGANInputs { "mnistDCGAN-inputs" };
+   string const kMnistDCGANOutputs { "mnistDCGAN-outputs" };
    string const kModel { "model" };
    string const kMulMat { "MulMat" };
    string const kRoot { "root" };

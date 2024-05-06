@@ -47,6 +47,10 @@ namespace mikado::common {
    extern std::string const kMakeMoreTrainingBatch;
    extern std::string const kMakeMoreTrainingBatchUpdateRate;
    extern std::string const kMakeMoreTrainingSteps;
+   extern std::string const kMnistDCGAN;
+   extern std::string const kMnistDCGANEpochs;
+   extern std::string const kMnistDCGANInputs;
+   extern std::string const kMnistDCGANOutputs;
    extern std::string const kModel;
    extern std::string const kMulMat;
    extern std::string const kRoot;

@@ -89,6 +89,8 @@ elseif(${TARGET} STREQUAL "torchBox")
 
             <torch/torch.h>
             <torch/script.h>
+
+            <torch/nn/module.h>
          )
    else()
       target_precompile_headers(${TARGET} REUSE_FROM common)
