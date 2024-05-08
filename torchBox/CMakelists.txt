@@ -17,7 +17,6 @@ set(CMAKE_FOLDER ${CMAKE_CURRENT_SOURCE_DIR}/../cmake)
 include(${CMAKE_FOLDER}/header.cmake)
 
 set(SRC_FILES
-   "src/dcganGeneratorImpl.cpp"
    "src/netBase.cpp"
    "src/netMulMat.cpp"
    "src/netMakeMore.cpp"
